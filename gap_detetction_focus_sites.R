@@ -14,10 +14,10 @@ library(rasterVis)
 library(RColorBrewer)
 library(sp)
 library(fieldRS)
+library(maptools)
 
 
 #---- load CHMs ------
-
 
 # load CHM croped to focus sites + 500m Buffer
 chm_fs1_crop <- rast("i:/Fonda/workspace/berchtesgaden/gaps/chm_focus_site1_large_stack.tif")
@@ -55,9 +55,9 @@ chm9_fs4_lbuffer <- chm_fs4_crop_buffer[[1]]
 chm17_fs4_lbuffer<- chm_fs4_crop_buffer[[2]]
 chm21_fs4_lbuffer<- chm_fs4_crop_buffer[[3]]
 
-# ---- Define functions
+# ---- Define functions ------
 
-# --- filter gaps via bounding box
+# filter gaps via bounding box
 
 crs <- "epsg:25832" #define crs outside of function
 filter_bbox20x20 <- function(gap_layer){
@@ -85,33 +85,7 @@ filter_bbox20x20 <- function(gap_layer){
   }
 }
 
-
-#filter function canopy height around gap
-
-#filter_gaps_20m_75quant <- function(gap_layer, chm) { #need bigger extent of chm to cover the whole area of the buffer!
-#  if(is.na(raster::minValue(gap_layer)) == TRUE & is.na(raster::maxValue(gap_layer)) ==TRUE) {  # check if there are gaps at all, if no keep NA raster
-#    gaps_filtered <- gap_layer
-#  }
-#  else{
-#  gaps__polygon <- GapSPDF(gap_layer)
-#  gaps_buffer <- buffer(vect(gaps__polygon), width = 20) 
-#  buffer_area <- mask(chm, gaps_buffer)
-#  buffer_area <- mask(buffer_area, vect(gaps__polygon), inverse=TRUE)   #extract CHM values for only buffer region without gap
-
-#  mean_canopy_around_gap <-  terra::extract(buffer_area, gaps_buffer)
-#  mean_canopy_around_gap <- mean_canopy_around_gap %>%                   #extract 75th quantile of CHM height in buffer area
-#                                         group_by(ID) %>% 
-#                                         summarize(quant75 = quantile(mean_canopy_around_gap[,2], probs =0.75, na.rm=TRUE))
-#  mean_canopy_filter <- mean_canopy_around_gap[!(mean_canopy_around_gap[,2] > 10),]                         #check if buffers mean < 10m
-#  if (dim(mean_canopy_filter)[1] == 0) {gaps_filtered <- gap_layer                                         #assign original gap layer when no gaps filtered out
-#  } 
-#  else{                                                                                                   #else filter out gaps
-#    mean_canopy_filter$replace <- NA
-#    gaps_filtered <- raster::subs(gap_layer, mean_canopy_filter, by=1, which="replace",subsWithNA=FALSE )
-#    return(gaps_filtered)
-#  }
-# }
-#}
+# filter gaps via min height of surrounding dominant trees
 
 filter_gaps_20m_75quant <- function(gap_layer, chm) { #need bigger extent of chm to cover the whole area of the buffer!
   if(is.na(minmax(gap_layer))[1,] == TRUE & is.na(minmax(gap_layer))[2,] ==TRUE) {  # check if there are gaps at all, if no keep NA raster
@@ -156,7 +130,7 @@ getGapChanges <- function(gap_1, gap2){ #gap 1 = 2009 gaps, gap2 = 2021 gaps
   change1 <- GapChangeDecTerra(gap_layer1 = gap_1, gap_layer2 = gap2)
   change2 <- GapChangeDecTerra(gap_layer1 = gap2, gap_layer2 = gap_1)
   gap_changes <- raster::merge(change1, change2)
-  return(gap_changes)   #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!muss gucken das output SpatRaster ist oder nächste Func raster nimmmt
+  return(gap_changes)   
 }
 
 
@@ -172,7 +146,7 @@ getGapChanges <- function(gap_1, gap2){ #gap 1 = 2009 gaps, gap2 = 2021 gaps
 m = c(-200, -1, 1, -1, 1, 2, 1, 200, 3)# 1= <-1 (loss); 2= -1/1 (steady); 3= >1 (gain)
 rclmat = matrix(m, ncol=3, byrow=TRUE)
 
-GetChangeDir <- function(chm1, chm2, gapchange, rclmat) { #chm1 ist chm21, chm2 is chm9
+GetChangeDir <- function(chm1, chm2, gapchange, rclmat) { #chm1 ist newer, chm2 is older
   diff <- chm1 - chm2  # create simple difference
   diff_class = terra::classify(diff, rclmat, include.lowest=TRUE) # Reclassify the raster layer
   # gap_change_dir <- raster::mask(raster::raster(diff_class), gapchange)
@@ -180,18 +154,11 @@ GetChangeDir <- function(chm1, chm2, gapchange, rclmat) { #chm1 ist chm21, chm2 
   return(gap_change_dir)
 }
 
-# function to get polygons from gaps
-getGapPolygons <- function(gap_layer) {
-  if(is.na(raster::minValue(gap_layer)) == TRUE & is.na(raster::maxValue(gap_layer)) ==TRUE) {  # check if there are gaps at all, if no keep NA raster
-    print("no gaps")
-  }
-  else{GapSPDF(gap_layer)}
-}
 
 #---- GAP DETECTION -------------------------------
 
 threshold <- 5
-size <- c(100,10^10) #m2 min and max gap size  
+size <- c(400,10^10) #m2 min and max gap size  
 
 # prepare lists
 
@@ -255,36 +222,28 @@ wd <- "i:/Fonda/workspace/berchtesgaden/gaps/"
 setwd(wd)
 
 #focus site 1
-#gap_layers_fs1 <- c(rast(gaps_filtered$chm9_fs1), rast(gaps_filtered$chm17_fs1), rast(gaps_filtered$chm21_fs1), 
-#                    rast(gap_change_fs1_917 ), rast(gap_change_dir1_917),rast(gap_change_fs1_1721 ), rast(gap_change_dir1_1721))
 gap_layers_fs1 <- c(gaps_filtered$chm9_fs1, gaps_filtered$chm17_fs1,gaps_filtered$chm21_fs1, 
                     gap_change_fs1_917,gap_change_dir1_917,gap_change_fs1_1721,gap_change_dir1_1721)
 names(gap_layers_fs1) <- c("gaps_9_fs1", "gaps_17_fs1", "gaps_21_fs1", "gap_changes_fs1_917", "gap_change_dir1_917", "gap_changes_fs1_1721", "gap_change_dir1_1721")
-terra::writeRaster(gap_layers_fs1, "gap_layers_fs1_100.tif",overwrite=TRUE)
+terra::writeRaster(gap_layers_fs1, "gap_layers_fs1_400.tif",overwrite=TRUE)
 
 #focus site 2
-#gap_layers_fs2 <- c(rast(gaps_filtered$chm9_fs2), rast(gaps_filtered$chm17_fs2), rast(gaps_filtered$chm21_fs2), 
-#                    rast(gap_change_fs2_917 ), rast(gap_change_dir2_917),rast(gap_change_fs2_1721 ), rast(gap_change_dir2_1721))
 gap_layers_fs2 <- c(gaps_filtered$chm9_fs2, gaps_filtered$chm17_fs2, gaps_filtered$chm21_fs2, 
                     gap_change_fs2_917, gap_change_dir2_917,gap_change_fs2_1721 ,gap_change_dir2_1721)
 names(gap_layers_fs2) <- c("gaps_9_fs2", "gaps_17_fs2", "gaps_21_fs2", "gap_changes_fs2_917", "gap_change_dir2_917", "gap_changes_fs2_1721", "gap_change_dir2_1721")
-terra::writeRaster(gap_layers_fs2, "gap_layers_fs2_100.tif",overwrite=TRUE)
+terra::writeRaster(gap_layers_fs2, "gap_layers_fs2_400.tif",overwrite=TRUE)
 
 #focus site 3
-#gap_layers_fs3 <- c(rast(gaps_filtered$chm9_fs3), rast(gaps_filtered$chm17_fs3), rast(gaps_filtered$chm21_fs3), 
-#                    rast(gap_change_fs3_917 ), rast(gap_change_dir3_917),rast(gap_change_fs3_1721 ), rast(gap_change_dir3_1721))
 gap_layers_fs3 <- c(gaps_filtered$chm9_fs3, gaps_filtered$chm17_fs3,gaps_filtered$chm21_fs3, 
                     gap_change_fs3_917 , gap_change_dir3_917,gap_change_fs3_1721,gap_change_dir3_1721)
 names(gap_layers_fs3) <- c("gaps_9_fs3", "gaps_17_fs3", "gaps_21_fs3", "gap_changes_fs3_917", "gap_change_dir3_917", "gap_changes_fs3_1721", "gap_change_dir3_1721")
-terra::writeRaster(gap_layers_fs3, "gap_layers_fs3_100.tif",overwrite=TRUE)
+terra::writeRaster(gap_layers_fs3, "gap_layers_fs3_400.tif",overwrite=TRUE)
 
 #focus site 4
-#gap_layers_fs4 <- c(rast(gaps_filtered$chm9_fs4), rast(gaps_filtered$chm17_fs4), rast(gaps_filtered$chm21_fs4), 
-#                    rast(gap_change_fs4_917 ), rast(gap_change_dir4_917),rast(gap_change_fs4_1721 ), rast(gap_change_dir4_1721))
 gap_layers_fs4 <- c(gaps_filtered$chm9_fs4, gaps_filtered$chm17_fs4, gaps_filtered$chm21_fs4, 
                     gap_change_fs4_917 , gap_change_dir4_917,gap_change_fs4_1721, gap_change_dir4_1721)
 names(gap_layers_fs4) <- c("gaps_9_fs4", "gaps_17_fs4", "gaps_21_fs4", "gap_changes_fs4_917", "gap_change_dir4_917", "gap_changes_fs4_1721", "gap_change_dir4_1721")
-terra::writeRaster(gap_layers_fs4, "gap_layers_fs4_100.tif",overwrite=TRUE)
+terra::writeRaster(gap_layers_fs4, "gap_layers_fs4_400.tif",overwrite=TRUE)
 
 
 # --- convert gaps to polygons ----
@@ -294,32 +253,61 @@ gaps_filtered_polygons <- lapply(gaps_filtered, function(n){
 })
 polygon_names <- as.list(c(names(gaps_filtered_polygons)))  #create list of names for export
 
-###### for raster input---
-#gaps_filtered_polygons <- lapply(gaps_filtered, function(n){
-#  getGapPolygons(n)
-#})
-#polygon_names <- as.list(c(names(gaps_filtered_polygons)))
-# delete layers without polygons/gaps
-#list.condition <- sapply(gaps_filtered_polygons, function(x) class(x) == "SpatialPolygonsDataFrame")
-#gap_polygons <- gaps_filtered_polygons[list.condition]
-
-#gap_polygons_vect <- lapply(gap_polygons, function(n) vect(n)) # transform to SpatVector for export
-#polygon_names <- as.list(c(names(gap_polygons_vect)))  #create list of names for export
-
-
-#gaps_filtered_polygons_stack <- list(vect(gaps_filtered_polygons$chm9_fs1), vect(gaps_filtered_polygons$chm17_fs1), vect(gaps_filtered_polygons$chm21_fs1),
-#                                  vect(gaps_filtered_polygons$chm9_fs2), vect(gaps_filtered_polygons$chm17_fs2), vect(gaps_filtered_polygons$chm21_fs2),
-#                                  vect(gaps_filtered_polygons$chm9_fs3), vect(gaps_filtered_polygons$chm17_fs3), vect(gaps_filtered_polygons$chm21_fs3),
-#                                  vect(gaps_filtered_polygons$chm9_fs4), vect(gaps_filtered_polygons$chm17_fs4), vect(gaps_filtered_polygons$chm21_fs4))
-#names(gaps_filtered_polygons_stack) <- chm_names
-
-# write polygons to file (can I write the collection to file?)
-#mapply(function(x,y){
-#  writeVector(x, paste("gaps_polygons", y , "max1ha.shp", sep="_"), overwrite=TRUE)}, x = gaps_filtered_polygons_stack, y= chm_names)
-
 # write polygons to file 
 mapply(function(x,y){
-  writeVector(x, paste("gaps_polygons_100", y , sep="_"), overwrite=TRUE)}, x = gaps_filtered_polygons, y= polygon_names)
+  writeVector(x, paste("gaps_polygons_400", y , sep="_"), overwrite=TRUE)}, x = gaps_filtered_polygons, y= polygon_names)
+
+# ---- using GapSPDF function to convert gaps to polygons -----
+
+gap_stack_fs1 <- rast("gap_layers_fs1_100.tif")
+gap_stack_fs2 <- rast("gap_layers_fs2_100.tif")
+gap_stack_fs3 <- rast("gap_layers_fs3_100.tif")
+gap_stack_fs4 <- rast("gap_layers_fs4_100.tif")
+
+gaps_filtered <- list(gap_stack_fs1$gaps_9_fs1, gap_stack_fs1$gaps_17_fs1, gap_stack_fs1$gaps_21_fs1,
+                      gap_stack_fs2$gaps_9_fs2, gap_stack_fs2$gaps_17_fs2, gap_stack_fs2$gaps_21_fs2,
+                      gap_stack_fs3$gaps_9_fs3, gap_stack_fs3$gaps_17_fs3, gap_stack_fs3$gaps_21_fs3,
+                      gap_stack_fs4$gaps_9_fs4, gap_stack_fs4$gaps_17_fs4, gap_stack_fs4$gaps_21_fs4)
+names(gaps_filtered) <- chm_names
+
+gaps_filtered_raster <- lapply(gaps_filtered, function(n){
+  raster::raster(n)
+})
+gap_polygons_gapR <- lapply(gaps_filtered_raster, function(n){
+  GapSPDF(n)
+})
+
+gap_polygons_vect <- lapply(gap_polygons_gapR, function(n) vect(n)) # transform to SpatVector for export
+polygon_names <- as.list(c(names(gap_polygons_vect))) 
+# write polygons to file 
+mapply(function(x,y){
+  writeVector(x, paste("gaps_polygons_GapSPDF_100", y , sep="_"), overwrite=TRUE)}, x = gap_polygons_vect, y= polygon_names)
+
+# GapSPDF function
+gap_layer <- gaps_filtered_raster$chm9_fs1
+function (gap_layer) 
+{
+  names(gap_layer) <- "gap_id"
+  gaps_spdf <- raster::rasterToPolygons(x = gap_layer, fun = NULL, 
+                                        n = 4, na.rm = TRUE, digits = 12, dissolve = TRUE)
+  gaps_spdf@data <- cbind(sp::coordinates(gaps_spdf), gaps_spdf@data)
+  colnames(gaps_spdf@data) <- c("x", "y", "gap_id")
+  return(gaps_spdf)
+}
+
+# trying to repair polygom geometry created by as.polygon from terra packages -> results in wried id assignment
+#gaps_polygons_valid <- lapply(gaps_filtered_polygons, function(n){
+#  makeValid(n)
+#})
+
+#is.valid(gap_polygon)
+#gap_polygon_valid <- makeValid(gap_polygon)
+
+# there seems to be an issue with the geometry, as there are holes, but I dont really understand where and why
+# I can remove holes by using remove.holes function from spatialEco package, but does that help us? May that even be problematic
+#library(rgdal)
+#plot(remove.holes(as( gaps_filtered_polygons$chm9_fs1, "Spatial")))
+#writeOGR(obj=as( gaps_filtered_polygons$chm9_fs1, "Spatial"), dsn="tempdir", layer="polygon_trialOGR", driver="ESRI Shapefile")
 
 
 #----------------- Code which has been used in trials -----------------#
@@ -378,3 +366,34 @@ for(i in 1:length(gaps_poly_spat)) {
 bboxfilter <- as.data.frame(bboxfilter)
 bboxfilter$replace <- NA
 gaps_filtered <- subst(gap_layer, from=bboxfilter$bboxfilter, to=bboxfilter$replace)
+
+# function to get polygons from gaps
+getGapPolygons <- function(gap_layer) {
+  if(is.na(raster::minValue(gap_layer)) == TRUE & is.na(raster::maxValue(gap_layer)) ==TRUE) {  # check if there are gaps at all, if no keep NA raster
+    print("no gaps")
+  }
+  else{GapSPDF(gap_layer)}
+}
+
+### store polygons for raster input (instead of terra input - Spatraster)
+#gaps_filtered_polygons <- lapply(gaps_filtered, function(n){
+#  getGapPolygons(n)
+#})
+#polygon_names <- as.list(c(names(gaps_filtered_polygons)))
+# delete layers without polygons/gaps
+#list.condition <- sapply(gaps_filtered_polygons, function(x) class(x) == "SpatialPolygonsDataFrame")
+#gap_polygons <- gaps_filtered_polygons[list.condition]
+
+#gap_polygons_vect <- lapply(gap_polygons, function(n) vect(n)) # transform to SpatVector for export
+#polygon_names <- as.list(c(names(gap_polygons_vect)))  #create list of names for export
+
+
+#gaps_filtered_polygons_stack <- list(vect(gaps_filtered_polygons$chm9_fs1), vect(gaps_filtered_polygons$chm17_fs1), vect(gaps_filtered_polygons$chm21_fs1),
+#                                  vect(gaps_filtered_polygons$chm9_fs2), vect(gaps_filtered_polygons$chm17_fs2), vect(gaps_filtered_polygons$chm21_fs2),
+#                                  vect(gaps_filtered_polygons$chm9_fs3), vect(gaps_filtered_polygons$chm17_fs3), vect(gaps_filtered_polygons$chm21_fs3),
+#                                  vect(gaps_filtered_polygons$chm9_fs4), vect(gaps_filtered_polygons$chm17_fs4), vect(gaps_filtered_polygons$chm21_fs4))
+#names(gaps_filtered_polygons_stack) <- chm_names
+
+# write polygons to file (can I write the collection to file?)
+#mapply(function(x,y){
+#  writeVector(x, paste("gaps_polygons", y , "max1ha.shp", sep="_"), overwrite=TRUE)}, x = gaps_filtered_polygons_stack, y= chm_names)

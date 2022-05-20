@@ -13,6 +13,7 @@ library(latticeExtra)
 library(rasterVis)
 library(RColorBrewer)
 library(sp)
+library(landscapemetrics)
 
 wd <- "i:/Fonda/workspace/berchtesgaden/gaps/"
 setwd(wd)
@@ -46,201 +47,90 @@ chm_list <- list(chm9_fs1, chm17_fs1, chm21_fs1,
                  chm9_fs4, chm17_fs4, chm21_fs4)
 names(chm_list) <- chm_names
 
+
 # load gap layer stacks
 
-gap_stack_fs1 <- rast("gap_layers_fs1_erosion.tif")
-gap_stack_fs2 <- rast("gap_layers_fs2_erosion.tif")
-gap_stack_fs3 <- rast("gap_layers_fs3_erosion.tif")
-gap_stack_fs4 <- rast("gap_layers_fs4_erosion.tif")
+# min 100
+gap_stack_fs1 <- rast("gap_layers_fs1_100.tif")
+gap_stack_fs2 <- rast("gap_layers_fs2_100.tif")
+gap_stack_fs3 <- rast("gap_layers_fs3_100.tif")
+gap_stack_fs4 <- rast("gap_layers_fs4_100.tif")
 
 
-gap_list <- list(gap_stack_fs1$gaps_9_fs1,gap_stack_fs1$gaps_17_fs1,gap_stack_fs1$gaps_21_fs1,
-                 gap_stack_fs2$gaps_9_fs2,gap_stack_fs2$gaps_17_fs2,gap_stack_fs2$gaps_21_fs2,
-                 gap_stack_fs3$gaps_9_fs3,gap_stack_fs3$gaps_17_fs3,gap_stack_fs3$gaps_21_fs3,
-                 gap_stack_fs4$gaps_9_fs4,gap_stack_fs4$gaps_17_fs4,gap_stack_fs4$gaps_21_fs4 )
-names(gap_list) <- chm_names
+gap_list_100 <- list(gap_stack_fs1$gaps_9_fs1,gap_stack_fs1$gaps_17_fs1,gap_stack_fs1$gaps_21_fs1,
+                     gap_stack_fs2$gaps_9_fs2,gap_stack_fs2$gaps_17_fs2,gap_stack_fs2$gaps_21_fs2,
+                     gap_stack_fs3$gaps_9_fs3,gap_stack_fs3$gaps_17_fs3,gap_stack_fs3$gaps_21_fs3,
+                     gap_stack_fs4$gaps_9_fs4,gap_stack_fs4$gaps_17_fs4,gap_stack_fs4$gaps_21_fs4 )
+names(gap_list_100) <- chm_names
+
+
+
+# min 250
+gap_stack_fs1 <- rast("gap_layers_fs1_250.tif")
+gap_stack_fs2 <- rast("gap_layers_fs2_250.tif")
+gap_stack_fs3 <- rast("gap_layers_fs3_250.tif")
+gap_stack_fs4 <- rast("gap_layers_fs4_250.tif")
+
+
+gap_list_250 <- list(gap_stack_fs1$gaps_9_fs1,gap_stack_fs1$gaps_17_fs1,gap_stack_fs1$gaps_21_fs1,
+                     gap_stack_fs2$gaps_9_fs2,gap_stack_fs2$gaps_17_fs2,gap_stack_fs2$gaps_21_fs2,
+                     gap_stack_fs3$gaps_9_fs3,gap_stack_fs3$gaps_17_fs3,gap_stack_fs3$gaps_21_fs3,
+                     gap_stack_fs4$gaps_9_fs4,gap_stack_fs4$gaps_17_fs4,gap_stack_fs4$gaps_21_fs4 )
+names(gap_list_250) <- chm_names
+
+
+
+# min 400
+gap_stack_fs1 <- rast("gap_layers_fs1_400.tif")
+gap_stack_fs2 <- rast("gap_layers_fs2_400.tif")
+gap_stack_fs3 <- rast("gap_layers_fs3_400.tif")
+gap_stack_fs4 <- rast("gap_layers_fs4_400.tif")
+
+
+gap_list_400 <- list(gap_stack_fs1$gaps_9_fs1,gap_stack_fs1$gaps_17_fs1,gap_stack_fs1$gaps_21_fs1,
+                     gap_stack_fs2$gaps_9_fs2,gap_stack_fs2$gaps_17_fs2,gap_stack_fs2$gaps_21_fs2,
+                     gap_stack_fs3$gaps_9_fs3,gap_stack_fs3$gaps_17_fs3,gap_stack_fs3$gaps_21_fs3,
+                     gap_stack_fs4$gaps_9_fs4,gap_stack_fs4$gaps_17_fs4,gap_stack_fs4$gaps_21_fs4 )
+names(gap_list_400) <- chm_names
+
 
 
 # load gap polygons
-polygons_erosion <- list()
-polygons_erosion <- lapply(chm_names, function(n) {
-  vect(paste("gaps_polygons_erosion_", n ,"/","gaps_polygons_erosion_", n ,".shp", sep=""))
+
+polygons_100 <- list()
+polygons_100 <- lapply(chm_names, function(n) {
+  vect(paste("gaps_polygons_100_", n ,"/","gaps_polygons_100_", n ,".shp", sep=""))
 })
-names(polygons_erosion) <- chm_names
+names(polygons_100) <- chm_names
 
-polygons_no_erosion <- list()
-polygons_no_erosion <- lapply(chm_names, function(n) {
-  vect(paste("gaps_polygons_", n ,"/","gaps_polygons_", n ,".shp", sep=""))
+polygons_250 <- list()
+polygons_250 <- lapply(chm_names, function(n) {
+  vect(paste("gaps_polygons_250_", n ,"/","gaps_polygons_250_", n ,".shp", sep=""))
 })
-names(polygons_no_erosion) <- chm_names
+names(polygons_250) <- chm_names
 
-# --- Gap statistics ---
-
-stats <- readRDS("gap_stats.RData")
-
-stats_9_fs1 <- as.data.frame(stats$chm9_fs1)
-stats_9_fs1$year <- as.factor(2009)
-stats_9_fs1$site <- as.factor(1)
-stats_17_fs1 <- as.data.frame(stats$chm17_fs1)
-stats_17_fs1$year <- as.factor(2017)
-stats_17_fs1$site <- as.factor(1)
-stats_21_fs1 <- as.data.frame(stats$chm21_fs1)
-stats_21_fs1$year <- as.factor(2021)
-stats_21_fs1$site <- as.factor(1)
-
-stats_fs1 <- rbind(stats_9_fs1, stats_17_fs1, stats_21_fs1)
-
-stats_9_fs2 <- as.data.frame(stats$chm9_fs2)
-stats_9_fs2$year <- as.factor(2009)
-stats_9_fs2$site <- as.factor(2)
-stats_17_fs2 <- as.data.frame(stats$chm17_fs2)
-stats_17_fs2$year <- as.factor(2017)
-stats_17_fs2$site <- as.factor(2)
-stats_21_fs2 <- as.data.frame(stats$chm21_fs2)
-stats_21_fs2$year <- as.factor(2021)
-stats_21_fs2$site <- as.factor(2)
-
-stats_fs2 <- rbind(stats_9_fs2, stats_17_fs2, stats_21_fs2)
-
-stats_9_fs3 <- as.data.frame(stats$chm9_fs3)
-stats_9_fs3$year <- as.factor(2009)
-stats_9_fs3$site <- as.factor(3)
-stats_17_fs3 <- as.data.frame(stats$chm17_fs3)
-stats_17_fs3$year <- as.factor(2017)
-stats_17_fs3$site <- as.factor(3)
-stats_21_fs3 <- as.data.frame(stats$chm21_fs3)
-stats_21_fs3$year <- as.factor(2021)
-stats_21_fs3$site <- as.factor(3)
-
-stats_fs3 <- rbind(stats_9_fs3, stats_17_fs3, stats_21_fs3)
-
-stats_9_fs4 <- as.data.frame(stats$chm9_fs4)
-stats_9_fs4$year <- as.factor(2009)
-stats_9_fs4$site <- as.factor(4)
-stats_17_fs4 <- as.data.frame(stats$chm17_fs4)
-stats_17_fs4$year <- as.factor(2017)
-stats_17_fs4$site <- as.factor(4)
-stats_21_fs4 <- as.data.frame(stats$chm21_fs4)
-stats_21_fs4$year <- as.factor(2021)
-stats_21_fs4$site <- as.factor(4)
-
-stats_fs4 <- rbind(stats_9_fs4, stats_17_fs4, stats_21_fs4)
-
-
-stats_all <- rbind(stats_fs1, stats_fs2, stats_fs3, stats_fs4)
-stats_all <- stats_all[stats_all$gap_id != 0, ]
-
-
-
-area <- ggplot(stats_all, aes(x=site, y=gap_area, color=year)) + geom_boxplot() + theme_minimal() 
-
-range <- ggplot(stats_all, aes(x=site, y=chm_range, color=year)) + geom_boxplot() + theme_minimal() 
-
-mean <- ggplot(stats_all, aes(x=site, y=chm_mean, color=year)) + geom_boxplot() + theme_minimal() 
-
-max <- ggplot(stats_all, aes(x=site, y=chm_max, color=year)) + geom_boxplot() + theme_minimal() 
-
-# ---calculate perimeter to area ratio
-
-#perimeter to area ratio (P:A) :circular gap will have the lowest P:A and as P:A increases the shape of gaps becomes
-# more complex.
-
-perimeter <- lapply(polygons_no_erosion, function(n){
-  perim(n)
+polygons_400 <- list()
+polygons_400 <- lapply(chm_names, function(n) {
+  vect(paste("gaps_polygons_400_", n ,"/","gaps_polygons_400_", n ,".shp", sep=""))
 })
-perimeter_unlist <- unlist(perimeter)
-
-stats_all$perimeter <- perimeter_unlist 
-stats_all$pa_ratio <- stats_all$perimeter/stats_all$gap_area  
-
-pa <- ggplot(stats_all, aes(x=site, y=pa_ratio, color=year)) + geom_boxplot() + theme_minimal() 
+names(polygons_400) <- chm_names
 
 
-# ------ calculate gap stats -----
+# --- define functions -----
 
-Gap_Stats_apply <- function (gap_layer, chm_layer, gap_polygon) 
+# function to calulate gap statistics
+
+Gap_Stats <- function (gap_layer, chm_layer, gap_polygon) 
 { gap_list <- data.frame(terra::freq(gap_layer))
 gap_list$count <- gap_list$count * raster::res(chm_layer)[1]^2
 gap_list <- gap_list[!is.na(gap_list[, 1]), ]
 # extract raster values per gap
-gap_chm <- terra::extract(chm_layer, gap_polygon)
-names(gap_chm)[2] <- "chm_values"
-# calculate gap statistics
-gap_list$chm_max <- as.data.frame(gap_chm %>% group_by(ID) %>% #create df and take second colum
-                                    summarize(chm_max = max(chm_values, na.rm=TRUE)))[,2]
-
-gap_list$chm_min <- as.data.frame(gap_chm %>% group_by(ID) %>% 
-                                    summarize(chm_min = round(min(chm_values, na.rm=TRUE))))[,2]
-
-gap_list$chm_mean <- as.data.frame(gap_chm %>%group_by(ID) %>% 
-                                     summarize(chm_mean = mean(chm_values, na.rm=TRUE)))[,2]
-
-gap_list$chm_sd <- as.data.frame(gap_chm %>% group_by(ID) %>% 
-                                   summarize(chm_mean = stats::sd(chm_values, na.rm=TRUE)))[,2]
-
-gap_list$chm_range <- round(gap_list$chm_max - gap_list$chm_min, 2)
-gap_list$perimeter <- perim(gap_polygon)
-
-gap_list$year <- sub("_.*", "", names(chm_layer))
-gap_list$site <- sub(".*_", "", names(chm_layer))
-
-gap_list <- gap_list[ , !names(gap_list) %in% c("layer")]
-# add perimeter to calculate perimeter/area ratio
-colnames(gap_list) <- c("gap_id", "gap_area", 
-                        "chm_max", "chm_min", "chm_mean", "chm_sd"
-                        ,"chm_range", "perimeter", "year", "site")
-return(gap_list)
-}
-
-#stats_list <- mapply(function(x,y,z){
-#  Gap_Stats_apply(gap_layer=x, chm_layer=y, gap_polygon=z)}, x= gap_list , y= chm_list, z= polygons_erosion) 
-
-stats9_1 <- Gap_Stats_apply(gap_list$chm9_fs1, chm_list$chm9_fs1, polygons_erosion$chm9_fs1)
-stats_17_1 <- Gap_Stats_apply(gap_list$chm17_fs1, chm_list$chm17_fs1, polygons_erosion$chm17_fs1)
-stats_21_1 <- Gap_Stats_apply(gap_list$chm21_fs1, chm_list$chm21_fs1, polygons_erosion$chm21_fs1)
-
-stats9_2 <- Gap_Stats_apply(gap_list$chm9_fs2, chm_list$chm9_fs2, polygons_erosion$chm9_fs2)
-stats_17_2 <- Gap_Stats_apply(gap_list$chm17_fs2, chm_list$chm17_fs2, polygons_erosion$chm17_fs2)
-stats_21_2 <- Gap_Stats_apply(gap_list$chm21_fs2, chm_list$chm21_fs2, polygons_erosion$chm21_fs2)
-
-stats9_3 <- Gap_Stats_apply(gap_list$chm9_fs3, chm_list$chm9_fs3, polygons_erosion$chm9_fs3)
-stats_17_3 <- Gap_Stats_apply(gap_list$chm17_fs3, chm_list$chm17_fs3, polygons_erosion$chm17_fs3)
-stats_21_3 <- Gap_Stats_apply(gap_list$chm21_fs3, chm_list$chm21_fs3, polygons_erosion$chm21_fs3)
-
-stats9_4 <- Gap_Stats_apply(gap_list$chm9_fs4, chm_list$chm9_fs4, polygons_erosion$chm9_fs4)
-stats_17_4 <- Gap_Stats_apply(gap_list$chm17_fs4, chm_list$chm17_fs4, polygons_erosion$chm17_fs4)
-stats_21_4 <- Gap_Stats_apply(gap_list$chm21_fs4, chm_list$chm21_fs4, polygons_erosion$chm21_fs4)
-
-stats_all_erosion <- rbind(stats9_1, stats9_2, stats9_3, stats9_4, 
-                           stats_17_1, stats_17_2, stats_17_3, stats_17_4, 
-                           stats_21_1, stats_21_2, stats_21_3, stats_21_4)
-
-
-#stats_trial
-
-area_e <- ggplot(stats_all_erosion, aes(x=site, y=gap_area, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with Erosion filter")
-
-max_e <- ggplot(stats_all_erosion, aes(x=site, y=chm_max, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with Erosion filter")
-
-range_e <- ggplot(stats_all_erosion, aes(x=site, y=chm_range, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with Erosion filter")
-
-mean_e <- ggplot(stats_all_erosion, aes(x=site, y=chm_mean, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with Erosion filter")
-
-stats_all_erosion$pa_ratio <- stats_all_erosion$perimeter/stats_all_erosion$gap_area
-pa_e <- ggplot(stats_all_erosion, aes(x=site, y=pa_ratio, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with Erosion filter")
-
-
-Gap_Stats_apply5 <- function (gap_layer, chm_layer, gap_polygon) 
-{ gap_list <- data.frame(terra::freq(gap_layer))
-gap_list$count <- gap_list$count * raster::res(chm_layer)[1]^2
-gap_list <- gap_list[!is.na(gap_list[, 1]), ]
-# extract raster values per gap
-gap_chm <- terra::extract(chm_layer, gap_polygon)
+gap_chm <- terra::extract(chm_layer, gap_polygon) #versucen hier einfach gap_layer und chm_layer zu stacken und in df überführen
 names(gap_chm)[2] <- "chm_values"
 gap_chm<- gap_chm %>%
   mutate(chm_values = ifelse(chm_values > 5, NA, chm_values)) #filter out values above 5
 # calculate gap statistics
-gap_list$chm_max <- as.data.frame(gap_chm %>% group_by(ID) %>% #create df and take second colum
+gap_list$chm_max <- as.data.frame(gap_chm %>% group_by(ID) %>% #create df and take second column
                                     summarize(chm_max = max(chm_values, na.rm=TRUE)))[,2]
 
 gap_list$chm_min <- as.data.frame(gap_chm %>% group_by(ID) %>% 
@@ -253,7 +143,7 @@ gap_list$chm_sd <- as.data.frame(gap_chm %>% group_by(ID) %>%
                                    summarize(chm_mean = stats::sd(chm_values, na.rm=TRUE)))[,2]
 
 gap_list$chm_range <- round(gap_list$chm_max - gap_list$chm_min, 2)
-gap_list$perimeter <- perim(gap_polygon)
+gap_list$perimeter <- perim(gap_polygon) #hierfür bräuchte man ggf. dann nicht das exakte Polygon, sondern könnte das von as-polygons nehmen
 
 gap_list$year <- sub("_.*", "", names(chm_layer))
 gap_list$site <- sub(".*_", "", names(chm_layer))
@@ -266,40 +156,309 @@ colnames(gap_list) <- c("gap_id", "gap_area",
 return(gap_list)
 }
 
+# function to calulate gap statistics without polygon
 
-stats9_1 <- Gap_Stats_apply5(gap_list$chm9_fs1, chm_list$chm9_fs1, polygons_erosion$chm9_fs1)
-stats_17_1 <- Gap_Stats_apply5(gap_list$chm17_fs1, chm_list$chm17_fs1, polygons_erosion$chm17_fs1)
-stats_21_1 <- Gap_Stats_apply5(gap_list$chm21_fs1, chm_list$chm21_fs1, polygons_erosion$chm21_fs1)
+gap_layer <- gap_stack_fs1$gaps_17_fs1
+chm_layer <- chm17_fs1
 
-stats9_2 <- Gap_Stats_apply5(gap_list$chm9_fs2, chm_list$chm9_fs2, polygons_erosion$chm9_fs2)
-stats_17_2 <- Gap_Stats_apply5(gap_list$chm17_fs2, chm_list$chm17_fs2, polygons_erosion$chm17_fs2)
-stats_21_2 <- Gap_Stats_apply5(gap_list$chm21_fs2, chm_list$chm21_fs2, polygons_erosion$chm21_fs2)
+Gap_Stats <- function (gap_layer, chm_layer) 
+{ gap_list <- data.frame(terra::freq(gap_layer))
+gap_list$count <- gap_list$count * raster::res(chm_layer)[1]^2
+gap_list <- gap_list[!is.na(gap_list[, 1]), ]
+# extract raster values per gap
+gap_chm <- as.data.frame(c(gap_layer, chm_layer))
+names(gap_chm) <- c("ID", "chm_values")
+# calculate gap statistics
+gap_list$chm_max <- as.data.frame(gap_chm %>% group_by(ID) %>% #create df and take second column
+                                    summarize(chm_max = max(chm_values, na.rm=TRUE)))[,2]
 
-stats9_3 <- Gap_Stats_apply5(gap_list$chm9_fs3, chm_list$chm9_fs3, polygons_erosion$chm9_fs3)
-stats_17_3 <- Gap_Stats_apply5(gap_list$chm17_fs3, chm_list$chm17_fs3, polygons_erosion$chm17_fs3)
-stats_21_3 <- Gap_Stats_apply5(gap_list$chm21_fs3, chm_list$chm21_fs3, polygons_erosion$chm21_fs3)
+gap_list$chm_min <- as.data.frame(gap_chm %>% group_by(ID) %>% 
+                                    summarize(chm_min = round(min(chm_values, na.rm=TRUE))))[,2]
 
-stats9_4 <- Gap_Stats_apply5(gap_list$chm9_fs4, chm_list$chm9_fs4, polygons_erosion$chm9_fs4)
-stats_17_4 <- Gap_Stats_apply5(gap_list$chm17_fs4, chm_list$chm17_fs4, polygons_erosion$chm17_fs4)
-stats_21_4 <- Gap_Stats_apply5(gap_list$chm21_fs4, chm_list$chm21_fs4, polygons_erosion$chm21_fs4)
+gap_list$chm_mean <- as.data.frame(gap_chm %>%group_by(ID) %>% 
+                                     summarize(chm_mean = mean(chm_values, na.rm=TRUE)))[,2]
 
-stats_all_erosion <- rbind(stats9_1, stats9_2, stats9_3, stats9_4, 
-                           stats_17_1, stats_17_2, stats_17_3, stats_17_4, 
-                           stats_21_1, stats_21_2, stats_21_3, stats_21_4)
+gap_list$chm_sd <- as.data.frame(gap_chm %>% group_by(ID) %>% 
+                                   summarize(chm_mean = stats::sd(chm_values, na.rm=TRUE)))[,2]
+
+gap_list$chm_range <- round(gap_list$chm_max - gap_list$chm_min, 2)
+
+gap_list <- cbind(gap_list, lsm_p_perim(gap_layer)[,6] ) #add perimeter
+
+gap_list$year <- sub("_.*", "", names(chm_layer))
+gap_list$site <- sub(".*_", "", names(chm_layer))
+
+gap_list <- gap_list[ , !names(gap_list) %in% c("layer")]
+
+colnames(gap_list) <- c("gap_id", "gap_area", 
+                        "chm_max", "chm_min", "chm_mean", "chm_sd"
+                        ,"chm_range", "perimeter", "year", "site")
+return(gap_list)
+}
 
 
 
-area_e5 <- ggplot(stats_all_erosion, aes(x=site, y=gap_area, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with Erosion filter and delte val >5")
+# ---  calculate gap statistics ---
 
-max_e5 <- ggplot(stats_all_erosion, aes(x=site, y=chm_max, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with Erosion filter and delte val >5")
+#stats_list <- mapply(function(x,y,z){
+#  Gap_Stats_apply(gap_layer=x, chm_layer=y, gap_polygon=z)}, x= gap_list , y= chm_list, z= polygons_erosion) 
 
-range_e5 <- ggplot(stats_all_erosion, aes(x=site, y=chm_range, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with Erosion filter and delte val >5")
+# min 100
+stats9_1_100 <- Gap_Stats(gap_list_100$chm9_fs1, chm_list$chm9_fs1, polygons_100$chm9_fs1)
+stats_17_1_100 <- Gap_Stats(gap_list_100$chm17_fs1, chm_list$chm17_fs1, polygons_100$chm17_fs1)
+stats_21_1_100 <- Gap_Stats(gap_list_100$chm21_fs1, chm_list$chm21_fs1, polygons_100$chm21_fs1)
 
-mean_e5 <- ggplot(stats_all_erosion, aes(x=site, y=chm_mean, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with Erosion filter and delte val >5")
+stats9_2_100 <- Gap_Stats(gap_list_100$chm9_fs2, chm_list$chm9_fs2, polygons_100$chm9_fs2)
+stats_17_2_100 <- Gap_Stats(gap_list_100$chm17_fs2, chm_list$chm17_fs2, polygons_100$chm17_fs2)
+stats_21_2_100 <- Gap_Stats(gap_list_100$chm21_fs2, chm_list$chm21_fs2, polygons_100$chm21_fs2)
 
-stats_all_erosion$pa_ratio <- stats_all_erosion$perimeter/stats_all_erosion$gap_area
-pa_e5 <- ggplot(stats_all_erosion, aes(x=site, y=pa_ratio, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with Erosion filter and delte val >5")
+stats9_3_100 <- Gap_Stats(gap_list_100$chm9_fs3, chm_list$chm9_fs3, polygons_100$chm9_fs3)
+stats_17_3_100 <- Gap_Stats(gap_list_100$chm17_fs3, chm_list$chm17_fs3, polygons_100$chm17_fs3)
+stats_21_3_100 <- Gap_Stats(gap_list_100$chm21_fs3, chm_list$chm21_fs3, polygons_100$chm21_fs3)
+
+stats9_4_100 <- Gap_Stats(gap_list_100$chm9_fs4, chm_list$chm9_fs4, polygons_100$chm9_fs4)
+stats_17_4_100 <- Gap_Stats(gap_list_100$chm17_fs4, chm_list$chm17_fs4, polygons_100$chm17_fs4)
+stats_21_4_100 <- Gap_Stats(gap_list_100$chm21_fs4, chm_list$chm21_fs4, polygons_100$chm21_fs4)
+
+stats_all_100 <- rbind(stats9_1_100, stats9_2_100, stats9_3_100, stats9_4_100, 
+                       stats_17_1_100, stats_17_2_100, stats_17_3_100, stats_17_4_100, 
+                       stats_21_1_100, stats_21_2_100, stats_21_3_100, stats_21_4_100)
+stats_all_100$pa_ratio <- stats_all_100$perimeter/stats_all_100$gap_area
+
+# min 250
+stats9_1_250 <- Gap_Stats(gap_list_250$chm9_fs1, chm_list$chm9_fs1, polygons_250$chm9_fs1)
+stats_17_1_250 <- Gap_Stats(gap_list_250$chm17_fs1, chm_list$chm17_fs1, polygons_250$chm17_fs1)
+stats_21_1_250 <- Gap_Stats(gap_list_250$chm21_fs1, chm_list$chm21_fs1, polygons_250$chm21_fs1)
+
+stats9_2_250 <- Gap_Stats(gap_list_250$chm9_fs2, chm_list$chm9_fs2, polygons_250$chm9_fs2)
+stats_17_2_250 <- Gap_Stats(gap_list_250$chm17_fs2, chm_list$chm17_fs2, polygons_250$chm17_fs2)
+stats_21_2_250 <- Gap_Stats(gap_list_250$chm21_fs2, chm_list$chm21_fs2, polygons_250$chm21_fs2)
+
+stats9_3_250 <- Gap_Stats(gap_list_250$chm9_fs3, chm_list$chm9_fs3, polygons_250$chm9_fs3)
+stats_17_3_250 <- Gap_Stats(gap_list_250$chm17_fs3, chm_list$chm17_fs3, polygons_250$chm17_fs3)
+stats_21_3_250 <- Gap_Stats(gap_list_250$chm21_fs3, chm_list$chm21_fs3, polygons_250$chm21_fs3)
+
+stats9_4_250 <- Gap_Stats(gap_list_250$chm9_fs4, chm_list$chm9_fs4, polygons_250$chm9_fs4)
+stats_17_4_250 <- Gap_Stats(gap_list_250$chm17_fs4, chm_list$chm17_fs4, polygons_250$chm17_fs4)
+stats_21_4_250 <- Gap_Stats(gap_list_250$chm21_fs4, chm_list$chm21_fs4, polygons_250$chm21_fs4)
+
+stats_all_250 <- rbind(stats9_1_250, stats9_2_250, stats9_3_250, stats9_4_250, 
+                       stats_17_1_250, stats_17_2_250, stats_17_3_250, stats_17_4_250, 
+                       stats_21_1_250, stats_21_2_250, stats_21_3_250, stats_21_4_250)
+stats_all_250$pa_ratio <- stats_all_250$perimeter/stats_all_250$gap_area
+
+# min 400
+stats9_1_400 <- Gap_Stats(gap_list_400$chm9_fs1, chm_list$chm9_fs1, polygons_400$chm9_fs1)
+stats_17_1_400 <- Gap_Stats(gap_list_400$chm17_fs1, chm_list$chm17_fs1, polygons_400$chm17_fs1)
+stats_21_1_400 <- Gap_Stats(gap_list_400$chm21_fs1, chm_list$chm21_fs1, polygons_400$chm21_fs1)
+
+stats9_2_400 <- Gap_Stats(gap_list_400$chm9_fs2, chm_list$chm9_fs2, polygons_400$chm9_fs2)
+stats_17_2_400 <- Gap_Stats(gap_list_400$chm17_fs2, chm_list$chm17_fs2, polygons_400$chm17_fs2)
+stats_21_2_400 <- Gap_Stats(gap_list_400$chm21_fs2, chm_list$chm21_fs2, polygons_400$chm21_fs2)
+
+stats9_3_400 <- Gap_Stats(gap_list_400$chm9_fs3, chm_list$chm9_fs3, polygons_400$chm9_fs3)
+stats_17_3_400 <- Gap_Stats(gap_list_400$chm17_fs3, chm_list$chm17_fs3, polygons_400$chm17_fs3)
+stats_21_3_400 <- Gap_Stats(gap_list_400$chm21_fs3, chm_list$chm21_fs3, polygons_400$chm21_fs3)
+
+stats9_4_400 <- Gap_Stats(gap_list_400$chm9_fs4, chm_list$chm9_fs4, polygons_400$chm9_fs4)
+stats_17_4_400 <- Gap_Stats(gap_list_400$chm17_fs4, chm_list$chm17_fs4, polygons_400$chm17_fs4)
+stats_21_4_400 <- Gap_Stats(gap_list_400$chm21_fs4, chm_list$chm21_fs4, polygons_400$chm21_fs4)
+
+stats_all_400 <- rbind(stats9_1_400, stats9_2_400, stats9_3_400, stats9_4_400, 
+                       stats_17_1_400, stats_17_2_400, stats_17_3_400, stats_17_4_400, 
+                       stats_21_1_400, stats_21_2_400, stats_21_3_400, stats_21_4_400)
+stats_all_400$pa_ratio <- stats_all_400$perimeter/stats_all_400$gap_area
+
+# min 400 without polygon
+stats9_1_400 <- Gap_Stats(gap_list_400$chm9_fs1, chm_list$chm9_fs1)
+stats_17_1_400 <- Gap_Stats(gap_list_400$chm17_fs1, chm_list$chm17_fs1)
+stats_21_1_400 <- Gap_Stats(gap_list_400$chm21_fs1, chm_list$chm21_fs1)
+
+stats9_2_400 <- Gap_Stats(gap_list_400$chm9_fs2, chm_list$chm9_fs2)
+stats_17_2_400 <- Gap_Stats(gap_list_400$chm17_fs2, chm_list$chm17_fs2)
+stats_21_2_400 <- Gap_Stats(gap_list_400$chm21_fs2, chm_list$chm21_fs2)
+
+stats9_3_400 <- Gap_Stats(gap_list_400$chm9_fs3, chm_list$chm9_fs3)
+stats_17_3_400 <- Gap_Stats(gap_list_400$chm17_fs3, chm_list$chm17_fs3)
+stats_21_3_400 <- Gap_Stats(gap_list_400$chm21_fs3, chm_list$chm21_fs3)
+
+stats9_4_400 <- Gap_Stats(gap_list_400$chm9_fs4, chm_list$chm9_fs4)
+stats_17_4_400 <- Gap_Stats(gap_list_400$chm17_fs4, chm_list$chm17_fs4)
+stats_21_4_400 <- Gap_Stats(gap_list_400$chm21_fs4, chm_list$chm21_fs4)
+
+stats_all_400 <- rbind(stats9_1_400, stats9_2_400, stats9_3_400, stats9_4_400, 
+                       stats_17_1_400, stats_17_2_400, stats_17_3_400, stats_17_4_400, 
+                       stats_21_1_400, stats_21_2_400, stats_21_3_400, stats_21_4_400)
+stats_all_400$pa_ratio <- stats_all_400$perimeter/stats_all_400$gap_area
+
+# change year label
+stats_all_100$year <- factor(stats_all_100$year, levels=c("chm9", "chm17", "chm21"), labels=c("2009", "2017", "2021"))
+stats_all_250$year <- factor(stats_all_250$year, levels=c("chm9", "chm17", "chm21"), labels=c("2009", "2017", "2021"))
+stats_all_400$year <- factor(stats_all_400$year, levels=c("chm9", "chm17", "chm21"), labels=c("2009", "2017", "2021"))
+
+# --- meta stats ---
+stats_100_summary <- stats_all_100 %>% count(site, year)
+stats_250_summary <- stats_all_250 %>% count(site, year)
+stats_400_summary <- stats_all_400 %>% count(site, year)
+
+n_100 <- ggplot(stats_100_summary, aes(x=year, y=n, color=site, group=site)) + geom_point() + geom_line() + theme_minimal() +
+  labs(title = "number of gaps per site and year with min 100")
+n_250 <- ggplot(stats_250_summary, aes(x=year, y=n, color=site, group=site)) + geom_point() + geom_line() + theme_minimal() +
+  labs(title = "number of gaps per site and year with min 250")
+n_400 <- ggplot(stats_400_summary, aes(x=year, y=n, color=site, group=site)) + geom_point() + geom_line() + theme_minimal() +
+  labs(title = "number of gaps per site and year with min 400")
+
+# --- plotting stats ---
+
+#min 100
+area_100 <- ggplot(stats_all_100, aes(x=site, y=gap_area, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 100")
+
+max_100 <- ggplot(stats_all_100, aes(x=site, y=chm_max, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 100")
+
+range_100 <- ggplot(stats_all_100, aes(x=site, y=chm_range, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 100")
+
+mean_100 <- ggplot(stats_all_100, aes(x=site, y=chm_mean, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 100")
+
+pa_100 <- ggplot(stats_all_100, aes(x=site, y=pa_ratio, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 100")
+
+#min 250
+area_250 <- ggplot(stats_all_250, aes(x=site, y=gap_area, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 250")
+
+max_250 <- ggplot(stats_all_250, aes(x=site, y=chm_max, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 250")
+
+range_250 <- ggplot(stats_all_250, aes(x=site, y=chm_range, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 250")
+
+mean_250 <- ggplot(stats_all_250, aes(x=site, y=chm_mean, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 250")
+
+pa_250 <- ggplot(stats_all_250, aes(x=site, y=pa_ratio, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 250")
+
+#min 400
+area_400 <- ggplot(stats_all_400, aes(x=site, y=gap_area, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 400")
+
+max_400 <- ggplot(stats_all_400, aes(x=site, y=chm_max, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 400")
+
+range_400 <- ggplot(stats_all_400, aes(x=site, y=chm_range, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 400")
+
+mean_400 <- ggplot(stats_all_400, aes(x=site, y=chm_mean, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 400")
+
+pa_400 <- ggplot(stats_all_400, aes(x=site, y=pa_ratio, color=year)) + geom_boxplot() + theme_minimal() + labs(title="with min 400")
+
+#plotting gap size in histogram and density
+
+stats_all_400$gap_area_ha <- stats_all_400$gap_area/10000
+
+stats_all_400 %>% ggplot(aes(gap_area, fill=site)) +
+  geom_histogram(alpha=0.25)+
+  labs(x="Area of gap size in m2")
+
+
+stats_all_400 %>% ggplot(aes(gap_area_ha, fill = year)) +  
+  #  geom_histogram(aes(y=..density..),alpha=0.5, bins =50) + #FFBB00
+  geom_density(col="#FFBB00",size=0.5, alpha =0.5) +
+  labs(x="Area of gap size in ha", y="Density") + facet_wrap(~site) + theme_minimal()
+
+stats_all_400 %>% filter(gap_area_ha < 1) %>% ggplot(aes(gap_area_ha, fill = year)) +  
+  #  geom_histogram(aes(y=..density..),alpha=0.5, bins =100) + #FFBB00
+  geom_density(col="#FFBB00",size=1, alpha=0.5) +
+  labs(x="Area of gap size in ha", y="Density") + facet_wrap(~site) + theme_minimal()
+
+stats_all_400 %>% filter(gap_area_ha < 1) %>% ggplot(aes(gap_area_ha, fill = year)) +  
+  geom_histogram(aes(y=..density..),alpha=0.5, bins =50) + #FFBB00
+  #  geom_density(col="#FFBB00",size=1, alpha=0.5) +
+  labs(x="Area of gap size in ha", y="Density") + facet_wrap(~site) + theme_minimal()
+
+stats_all_400 %>% filter(gap_area_ha < 2) %>% 
+  ggplot(aes(x=site, y=gap_area_ha, color=year)) + geom_boxplot() + theme_minimal() 
+
+
+##############################################################
+# calculate Gap-size-frequency-distribution
+##############################################################
+
+
+Gap_Stats2 <- function (gap_layer, chm_layer) 
+{
+  GiniCoeff <- function(x, finite.sample = TRUE, na.rm = TRUE) {
+    if (!na.rm && any(is.na(x))) {
+      return(NA_real_)
+    }
+    x <- as.numeric(stats::na.omit(x))
+    n <- length(x)
+    x <- sort(x)
+    G <- 2 * sum(x * 1L:n)/sum(x) - (n + 1L)
+    if (finite.sample) {
+      GC <- G/(n - 1L)
+    }
+    else {
+      GC <- G/n
+    }
+    return(GC)
+  }
+  gap_list <- data.frame(raster::freq(gap_layer))
+  gap_list$count <- gap_list$count * raster::res(chm_layer)[1]^2
+  gap_list <- gap_list[!is.na(gap_list[, 1]), ]
+  gap_list$chm_max <- tapply(chm_layer[], gap_layer[], max)
+  gap_list$chm_min <- tapply(chm_layer[], gap_layer[], min)
+  gap_list$chm_mean <- round(tapply(chm_layer[], gap_layer[], 
+                                    mean), 2)
+  gap_list$chm_sd <- round(tapply(chm_layer[], gap_layer[], 
+                                  stats::sd), 2)
+  gap_list$chm_gini <- round(tapply(chm_layer[], gap_layer[], 
+                                    GiniCoeff), 2)
+  gap_list$chm_range <- round(gap_list$chm_max - gap_list$chm_min, 
+                              2)
+  gap_list <- gap_list[ , !names(gap_list) %in% c("layer")]
+  colnames(gap_list) <- c("gap_id", "gap_area", 
+                          "chm_max", "chm_min", "chm_mean", "chm_sd", 
+                          "chm_gini", "chm_range")
+  return(gap_list)
+}
+
+
+gap_stack_fs1$gaps_9_fs1[is.na(gap_stack_fs1$gaps_9_fs1)] <- 0 #change NAs to 0
+gap_stack_fs1$gaps_17_fs1[is.na(gap_stack_fs1$gaps_17_fs1)] <- 0
+gap_stack_fs1$gaps_21_fs1[is.na(gap_stack_fs1$gaps_21_fs1)] <- 0
+#stats_fs1_9 <- GapStats(gap_stack_fs1$gaps_9_fs1, chm9_fs1)
+stats_fs1_9 <- Gap_Stats2(gap_stack_fs1$gaps_9_fs1, chm9_fs1)
+stats_fs1_17<- Gap_Stats2(gap_stack_fs1$gaps_17_fs1, chm17_fs1)
+stats_fs1_21<- Gap_Stats2(gap_stack_fs1$gaps_21_fs1, chm21_fs1)
+Stats_fs1_9<- stats_fs1_9[!(stats_fs1_9$gap_id == 0),] # exclude non gap area
+Stats_fs1_17<- stats_fs1_17[!(stats_fs1_17$gap_id == 0),] # exclude non gap area
+Stats_fs1_21<- stats_fs1_21[!(stats_fs1_21$gap_id == 0),] # exclude non gap area
+
+
+# Gap-size Frequency Distributions
+GapSizeFDist(
+  gaps_stats = gap_list, method = "Hanel_2017", col = "forestgreen", pch = 16, cex = 1,
+  axes = FALSE, ylab = "Gap Frequency", xlab = as.expression(bquote("Gap Size" ~ (m^2)))
+)
+axis(1)
+axis(2)
+grid(4, 4)
+
+# Gap-size Frequency Distributions
+GapSizeFDist(
+  gaps_stats = Stats_fs1_17, method = "Hanel_2017", col = "forestgreen", pch = 16, cex = 1,
+  axes = FALSE, ylab = "Gap Frequency", xlab = as.expression(bquote("Gap Size" ~ (m^2)))
+)
+axis(1)
+axis(2)
+grid(4, 4)
+
+# Gap-size Frequency Distributions
+GapSizeFDist(
+  gaps_stats = Stats_fs1_21, method = "Hanel_2017", col = "forestgreen", pch = 16, cex = 1,
+  axes = FALSE, ylab = "Gap Frequency", xlab = as.expression(bquote("Gap Size" ~ (m^2)))
+)
+axis(1)
+axis(2)
+grid(4, 4)
+
+
+
 
 ######################################################################################
 # Subset gaps per elevation level, management, other regional criteria
 ######################################################################################
+
+
