@@ -395,7 +395,7 @@ pl
 trajectories_fs1_df1 <- as.data.frame(trajectories_fs1) %>%
   group_by(lyr.1) %>%
   tally() %>%
-  mutate(area = (n * res(trajectories_fs1)[1] * res(trajectories_fs1)[2])/10000),
+  mutate(area = (n * res(trajectories_fs1)[1] * res(trajectories_fs1)[2])/10000,
 site = as.factor(1),
 trajectory = as.factor(recode(lyr.1,
                               `1`="steady vegetation",

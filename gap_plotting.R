@@ -15,10 +15,16 @@ library(rasterVis)
 library(RColorBrewer)
 library(sp)
 
-wd <- "i:/Fonda/workspace/berchtesgaden/gaps/"
+#wd <- "i:/Fonda/workspace/berchtesgaden/gaps/"
+wd <- "~/Documents/global_change_geography/masterthesis/data/processed_data_from_server/data"
 setwd(wd)
 
 #---- load CHMs, gap layers and polygons ------
+
+chm_all <- rast("chm_berchtesgaden_stack_1m.tif")
+chm9 <- chm_all[[1]]
+chm17<- chm_all[[2]]
+chm21<- chm_all[[3]]
 
 # load CHM croped to focus sites + 500m Buffer
 chm_fs1_crop <- rast("chm_focus_site1_large_stack.tif")
@@ -80,11 +86,21 @@ polygons_400 <- lapply(chm_names, function(n) {
 })
 names(polygons_400) <- chm_names
 
+# load NP layer
+
+zones <- vect("~/Documents/global_change_geography/masterthesis/data/berchtesgaden_data/npb_zonierung_22_epsg25832.shp")
+
 
 #--- theme preperation
 
 myTheme <- viridisTheme()
 myTheme$panel.background$col = 'gray' 
+
+
+# --- plot map for poster
+
+levelplot(chm9, margin = FALSE, par.setting =GrTheme(), main= list("Gaps 2009 min 100"), scales=list(draw=FALSE)) +
+  layer_(sp.polygons(as(zones, "Spatial"), fill='red'))
 
 
 # ---- Focus site 1

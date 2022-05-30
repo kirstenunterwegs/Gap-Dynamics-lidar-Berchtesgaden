@@ -15,7 +15,8 @@ library(RColorBrewer)
 library(sp)
 library(landscapemetrics)
 
-wd <- "i:/Fonda/workspace/berchtesgaden/gaps/"
+#wd <- "i:/Fonda/workspace/berchtesgaden/gaps/"
+wd <- "~/Documents/global_change_geography/masterthesis/data/processed_data_from_server/data"
 setwd(wd)
 
 # --- load CHM and Gap layers ----
@@ -115,46 +116,82 @@ polygons_400 <- lapply(chm_names, function(n) {
 })
 names(polygons_400) <- chm_names
 
+# --- load NP information 
+wd <- "~/Documents/global_change_geography/masterthesis/data/berchtesgaden_data"
+setwd(wd)
+
+foresttype <- vect("forest_type_map.shp")
+management <- vect("npb_zonierung_22_epsg25832.shp")
 
 # --- define functions -----
 
+# rasterize NP information
+
+r_1 <- rast()
+ext(r_1) <- ext(chm9_fs1)
+terra::res(r_1) <- terra::res(chm9_fs1)  
+terra::crs(r_1) <- terra::crs(chm9_fs1)
+r_2 <- rast()
+ext(r_2) <- ext(chm9_fs2)
+terra::res(r_2) <- terra::res(chm9_fs2)  
+terra::crs(r_2) <- terra::crs(chm9_fs2)
+r_3 <- rast()
+ext(r_3) <- ext(chm9_fs3)
+terra::res(r_3) <- terra::res(chm9_fs3)  
+terra::crs(r_3) <- terra::crs(chm9_fs3)
+r_4 <- rast()
+ext(r_4) <- ext(chm9_fs4)
+terra::res(r_4) <- terra::res(chm9_fs4)  
+terra::crs(r_4) <- terra::crs(chm9_fs4)
+
+ftype_1 <- terra::rasterize(foresttype, r_1, field="type")
+ftype_2 <- terra::rasterize(foresttype, r_2, field="type")
+ftype_3 <- terra::rasterize(foresttype, r_3, field="type")
+ftype_4 <- terra::rasterize(foresttype, r_4, field="type")
+
+# rasterize Management Information
+mtype_1 <- terra::rasterize(management, r_1, field="zone_id")
+mtype_2 <- terra::rasterize(management, r_2, field="zone_id")
+mtype_3 <- terra::rasterize(management, r_3, field="zone_id")
+mtype_4 <- terra::rasterize(management, r_4, field="zone_id")
+
 # function to calulate gap statistics
 
-Gap_Stats <- function (gap_layer, chm_layer, gap_polygon) 
-{ gap_list <- data.frame(terra::freq(gap_layer))
-gap_list$count <- gap_list$count * raster::res(chm_layer)[1]^2
-gap_list <- gap_list[!is.na(gap_list[, 1]), ]
-# extract raster values per gap
-gap_chm <- terra::extract(chm_layer, gap_polygon) #versucen hier einfach gap_layer und chm_layer zu stacken und in df überführen
-names(gap_chm)[2] <- "chm_values"
-gap_chm<- gap_chm %>%
-  mutate(chm_values = ifelse(chm_values > 5, NA, chm_values)) #filter out values above 5
-# calculate gap statistics
-gap_list$chm_max <- as.data.frame(gap_chm %>% group_by(ID) %>% #create df and take second column
-                                    summarize(chm_max = max(chm_values, na.rm=TRUE)))[,2]
-
-gap_list$chm_min <- as.data.frame(gap_chm %>% group_by(ID) %>% 
-                                    summarize(chm_min = round(min(chm_values, na.rm=TRUE))))[,2]
-
-gap_list$chm_mean <- as.data.frame(gap_chm %>%group_by(ID) %>% 
-                                     summarize(chm_mean = mean(chm_values, na.rm=TRUE)))[,2]
-
-gap_list$chm_sd <- as.data.frame(gap_chm %>% group_by(ID) %>% 
-                                   summarize(chm_mean = stats::sd(chm_values, na.rm=TRUE)))[,2]
-
-gap_list$chm_range <- round(gap_list$chm_max - gap_list$chm_min, 2)
-gap_list$perimeter <- perim(gap_polygon) #hierfür bräuchte man ggf. dann nicht das exakte Polygon, sondern könnte das von as-polygons nehmen
-
-gap_list$year <- sub("_.*", "", names(chm_layer))
-gap_list$site <- sub(".*_", "", names(chm_layer))
-
-gap_list <- gap_list[ , !names(gap_list) %in% c("layer")]
-# add perimeter to calculate perimeter/area ratio
-colnames(gap_list) <- c("gap_id", "gap_area", 
-                        "chm_max", "chm_min", "chm_mean", "chm_sd"
-                        ,"chm_range", "perimeter", "year", "site")
-return(gap_list)
-}
+# Gap_Stats <- function (gap_layer, chm_layer, gap_polygon) 
+# { gap_list <- data.frame(terra::freq(gap_layer))
+# gap_list$count <- gap_list$count * raster::res(chm_layer)[1]^2
+# gap_list <- gap_list[!is.na(gap_list[, 1]), ]
+# # extract raster values per gap
+# gap_chm <- terra::extract(chm_layer, gap_polygon) #versucen hier einfach gap_layer und chm_layer zu stacken und in df überführen
+# names(gap_chm)[2] <- "chm_values"
+# gap_chm<- gap_chm %>%
+#   mutate(chm_values = ifelse(chm_values > 5, NA, chm_values)) #filter out values above 5
+# # calculate gap statistics
+# gap_list$chm_max <- as.data.frame(gap_chm %>% group_by(ID) %>% #create df and take second column
+#                                     summarize(chm_max = max(chm_values, na.rm=TRUE)))[,2]
+# 
+# gap_list$chm_min <- as.data.frame(gap_chm %>% group_by(ID) %>% 
+#                                     summarize(chm_min = round(min(chm_values, na.rm=TRUE))))[,2]
+# 
+# gap_list$chm_mean <- as.data.frame(gap_chm %>%group_by(ID) %>% 
+#                                      summarize(chm_mean = mean(chm_values, na.rm=TRUE)))[,2]
+# 
+# gap_list$chm_sd <- as.data.frame(gap_chm %>% group_by(ID) %>% 
+#                                    summarize(chm_mean = stats::sd(chm_values, na.rm=TRUE)))[,2]
+# 
+# gap_list$chm_range <- round(gap_list$chm_max - gap_list$chm_min, 2)
+# gap_list$perimeter <- perim(gap_polygon) #hierfür bräuchte man ggf. dann nicht das exakte Polygon, sondern könnte das von as-polygons nehmen
+# 
+# gap_list$year <- sub("_.*", "", names(chm_layer))
+# gap_list$site <- sub(".*_", "", names(chm_layer))
+# 
+# gap_list <- gap_list[ , !names(gap_list) %in% c("layer")]
+# # add perimeter to calculate perimeter/area ratio
+# colnames(gap_list) <- c("gap_id", "gap_area", 
+#                         "chm_max", "chm_min", "chm_mean", "chm_sd"
+#                         ,"chm_range", "perimeter", "year", "site")
+# return(gap_list)
+# }
 
 # function to calulate gap statistics without polygon
 
@@ -193,6 +230,74 @@ gap_list <- gap_list[ , !names(gap_list) %in% c("layer")]
 colnames(gap_list) <- c("gap_id", "gap_area", 
                         "chm_max", "chm_min", "chm_mean", "chm_sd"
                         ,"chm_range", "perimeter", "year", "site")
+return(gap_list)
+}
+
+
+# --------------------------------- function to calculate gap statistics without polygon + NP information
+
+gap_layer <- gap_stack_fs1$gaps_17_fs1
+chm_layer <- chm17_fs1
+foresttype <- ftype_1
+
+#do the same with management types!!!!!!
+
+#function to assign forest type
+getForestType <- function(gap_chm) {
+  x <-gap_chm %>% group_by(ID, ftype) %>% #count pixels per ftype per gap
+    summarize(count = n())
+  #identify dominating forest type in gap area
+  xx <- data_frame()
+  for (i in unique(x$ID)) {
+    a <- x[x$ID == i,]        #subset to one ID
+    a <- a[order(-a$count),]  #order descending according to pixel counts   
+    if(nrow(a) == 1) {        #if only one entry = one forest type assign that one to ID
+      xx <- rbind(xx,a[1,])
+    }
+    if(nrow(a) > 1) {         #if more than one entry = several ftypes or NAs
+      if(is.na(a[1,2])) {xx <- rbind(xx,a[2,])}   #if is.na == TRUE = no forest type info assign NA
+      if(is.na(a[1,2]) == FALSE) {xx <- rbind(xx,a[1,])}  #if there is other ftype info assign that one to ID
+    }
+  }
+  return(xx)
+}
+
+
+Gap_Stats <- function (gap_layer, chm_layer, foresttype) 
+{ gap_list <- data.frame(terra::freq(gap_layer))
+gap_list$count <- gap_list$count * terra::res(chm_layer)[1]^2
+gap_list <- gap_list[!is.na(gap_list[, 1]), ]
+# extract raster values per gap
+gap_chm <- as.data.frame(c(gap_layer, chm_layer, foresttype), na.rm = FALSE)
+names(gap_chm) <- c("ID", "chm_values", "ftype")
+gap_chm <- gap_chm[!is.na(gap_chm$ID),]# delete pixels without any gap
+# calculate gap statistics
+gap_list$chm_max <- as.data.frame(gap_chm %>% group_by(ID) %>% #create df and take second column
+                                    summarize(chm_max = max(chm_values, na.rm=TRUE)))[,2]
+
+gap_list$chm_min <- as.data.frame(gap_chm %>% group_by(ID) %>% 
+                                    summarize(chm_min = round(min(chm_values, na.rm=TRUE))))[,2]
+
+gap_list$chm_mean <- as.data.frame(gap_chm %>%group_by(ID) %>% 
+                                     summarize(chm_mean = mean(chm_values, na.rm=TRUE)))[,2]
+
+gap_list$chm_sd <- as.data.frame(gap_chm %>% group_by(ID) %>% 
+                                   summarize(chm_mean = stats::sd(chm_values, na.rm=TRUE)))[,2]
+
+gap_list$chm_range <- round(gap_list$chm_max - gap_list$chm_min, 2)
+
+#gap_list <- cbind(gap_list, lsm_p_perim(raster::raster(gap_layer))[,6] ) #add perimeter   !!!reactivate function on server
+
+gap_list$ftype <- as.data.frame(getForestType(gap_chm))[,2]
+
+gap_list$year <- sub("_.*", "", names(chm_layer))
+gap_list$site <- sub(".*_", "", names(chm_layer))
+
+gap_list <- gap_list[ , !names(gap_list) %in% c("layer")]
+
+colnames(gap_list) <- c("gap_id", "gap_area", 
+                        "chm_max", "chm_min", "chm_mean", "chm_sd"
+                        ,"chm_range", "forest_type", "year", "site") #add , "perimeter" after range!
 return(gap_list)
 }
 
@@ -291,6 +396,29 @@ stats_all_400 <- rbind(stats9_1_400, stats9_2_400, stats9_3_400, stats9_4_400,
                        stats_21_1_400, stats_21_2_400, stats_21_3_400, stats_21_4_400)
 stats_all_400$pa_ratio <- stats_all_400$perimeter/stats_all_400$gap_area
 
+# min 400 without polygon with forest type info
+stats9_1_400 <- Gap_Stats(gap_list_400$chm9_fs1, chm_list$chm9_fs1, ftype_1)
+stats_17_1_400 <- Gap_Stats(gap_list_400$chm17_fs1, chm_list$chm17_fs1, ftype_1)
+stats_21_1_400 <- Gap_Stats(gap_list_400$chm21_fs1, chm_list$chm21_fs1, ftype_1)
+
+stats9_2_400 <- Gap_Stats(gap_list_400$chm9_fs2, chm_list$chm9_fs2, ftype_2)
+stats_17_2_400 <- Gap_Stats(gap_list_400$chm17_fs2, chm_list$chm17_fs2, ftype_2)
+stats_21_2_400 <- Gap_Stats(gap_list_400$chm21_fs2, chm_list$chm21_fs2, ftype_2)
+
+stats9_3_400 <- Gap_Stats(gap_list_400$chm9_fs3, chm_list$chm9_fs3, ftype_3)
+stats_17_3_400 <- Gap_Stats(gap_list_400$chm17_fs3, chm_list$chm17_fs3, ftype_3)
+stats_21_3_400 <- Gap_Stats(gap_list_400$chm21_fs3, chm_list$chm21_fs3, ftype_3)
+
+stats9_4_400 <- Gap_Stats(gap_list_400$chm9_fs4, chm_list$chm9_fs4, ftype_4)
+stats_17_4_400 <- Gap_Stats(gap_list_400$chm17_fs4, chm_list$chm17_fs4, ftype_4)
+stats_21_4_400 <- Gap_Stats(gap_list_400$chm21_fs4, chm_list$chm21_fs4, ftype_4)
+
+stats_all_400 <- rbind(stats9_1_400, stats9_2_400, stats9_3_400, stats9_4_400, 
+                       stats_17_1_400, stats_17_2_400, stats_17_3_400, stats_17_4_400, 
+                       stats_21_1_400, stats_21_2_400, stats_21_3_400, stats_21_4_400)
+stats_all_400$pa_ratio <- stats_all_400$perimeter/stats_all_400$gap_area
+
+
 # change year label
 stats_all_100$year <- factor(stats_all_100$year, levels=c("chm9", "chm17", "chm21"), labels=c("2009", "2017", "2021"))
 stats_all_250$year <- factor(stats_all_250$year, levels=c("chm9", "chm17", "chm21"), labels=c("2009", "2017", "2021"))
@@ -370,6 +498,36 @@ stats_all_400 %>% filter(gap_area_ha < 1) %>% ggplot(aes(gap_area_ha, fill = yea
 stats_all_400 %>% filter(gap_area_ha < 2) %>% 
   ggplot(aes(x=site, y=gap_area_ha, color=year)) + geom_boxplot() + theme_minimal() 
 
+# plot gap area according to forest type
+setwd("~/Documents/global_change_geography/masterthesis/data")
+My_Theme = theme(
+  title = element_text(size = 18),
+  axis.title.x = element_text(size = 16),
+  axis.text.x = element_text(size = 14),
+  axis.title.y = element_text(size = 16),
+  legend.key.height = unit(1, 'cm'),
+  legend.title = element_text(size=16),
+  legend.text = element_text(size=14))
+
+tiff("gap_area_ftype.tiff", units="in", width=12, height=8, res=500)
+ggplot(stats_all_400, aes(x=forest_type, y=gap_area_ha, color=year)) + geom_boxplot() + theme_minimal() + labs(title="Gap area per forest type", x="forest type", y="gap area in ha") + My_Theme  + scale_color_brewer(palette = "Dark2")
+dev.off()
+
+
+stats_all_400 %>% ggplot(aes(gap_area_ha, fill = year)) +  
+  #  geom_histogram(aes(y=..density..),alpha=0.5, bins =50) + #FFBB00
+  geom_density(col="#FFBB00",size=0.5, alpha =0.5) +
+  labs(x="Area of gap size in ha", y="Density") + facet_wrap(~forest_type) + theme_minimal()
+
+stats_all_400 %>% filter(gap_area_ha < 2) %>% ggplot(aes(gap_area_ha, fill = year)) +  
+  #  geom_histogram(aes(y=..density..),alpha=0.5, bins =100) + #FFBB00
+  geom_density(col="#FFBB00",size=1, alpha=0.5) +
+  labs(x="Area of gap size in ha", y="Density") + facet_wrap(~forest_type) + theme_minimal()
+
+stats_all_400 %>% filter(gap_area_ha < 2) %>% ggplot(aes(gap_area_ha, fill = year)) +  
+  geom_histogram(aes(y=..density..),alpha=0.5, bins =50) + #FFBB00
+  #  geom_density(col="#FFBB00",size=1, alpha=0.5) +
+  labs(x="Area of gap size in ha", y="Count") + facet_wrap(~forest_type) + theme_minimal()
 
 ##############################################################
 # calculate Gap-size-frequency-distribution
