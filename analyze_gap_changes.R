@@ -113,7 +113,27 @@ ggplot(long, aes(fill=condition, y=area_ha, x=year, label = area_ha)) +
   geom_text(size = 3, position = position_stack(vjust = 0.5)) +facet_wrap(~site)
 
 
+wd <- "i:/Fonda/workspace/berchtesgaden/gaps/plots/"
+setwd(wd)
 
+My_Theme = theme(
+  title = element_text(size = 18),
+  axis.title.x = element_text(size = 18),
+  axis.text.x = element_text(size = 18),
+  axis.text.y = element_text(size = 13),
+  axis.title.y = element_text(size = 18),
+  legend.key.height = unit(1, 'cm'),
+  legend.title = element_text(size=18),
+  legend.text = element_text(size=16),
+  strip.text.x = element_text(size = 20))
+
+tiff("area_share_site.tiff", units="in", width=12, height=8, res=300)
+ggplot(long, aes(fill=condition, y=area_ha, x=year, label = area_ha)) + 
+  geom_bar(position="stack", stat="identity") + theme_minimal()  +
+  labs( x="year", y="area [ha]") +
+  geom_text(size = 3, position = position_stack(vjust = 0.5)) +facet_grid(~site)+
+  My_Theme  +  scale_fill_brewer(palette="Dark2", direction=-1) + guides(fill=guide_legend(title="Condition"))
+dev.off()
 
 
 # ---- classify gap changes in gap expansion and gap closure ---
@@ -126,11 +146,11 @@ gap_change_class <- function(chm9, chm17, gap_change){
   res(exp_clo) <- res(chm9)
   crs(exp_clo) <- crs(chm9)
   # classify change group
-  exp_clo[gap_change == 2 & chm9 <= 5 & chm17 <=5] <- 1 #steady gaps which fall out of gap detetction or are now included (prev not)
-  exp_clo[gap_change == 2 & chm9 > 5 & chm17 <=5] <- 2 #gap expansion
-  exp_clo[gap_change == 2 & chm9 <= 5 & chm17 >5] <- 3 #gap closure
-  exp_clo[gap_change == 2 & chm9 >5 & chm17 >5] <- 4 #steady vefetation
-  return(exp_clo)
+   exp_clo[gap_change == 2 & chm9 <= 5 & chm17 <=5] <- 1 #steady gaps which fall out of gap detetction or are now included (prev not)
+   exp_clo[gap_change == 2 & chm9 > 5 & chm17 <=5] <- 2 #gap expansion
+   exp_clo[gap_change == 2 & chm9 <= 5 & chm17 >5] <- 3 #gap closure
+   exp_clo[gap_change == 2 & chm9 >5 & chm17 >5] <- 4 #steady vefetation
+   return(exp_clo)
 }   
 
 # simplified function to identify gap expansion and gap closure
@@ -186,42 +206,58 @@ myTheme <- BuRdTheme()
 #myTheme$panel.background$col = 'gray' 
 
 #fs1
-levelplot(exp_clo_fs1_917, margin = FALSE, par.setting =myTheme, main= list("Gap change fs1 9-17"),
-          colorkey=list(at=seq(0, 2, 1),labels=list(at=c(1, 2), 
-                                                    labels=c( "gap closure", "gap expansion"))), scales=list(draw=FALSE)) + 
+
+levelplot(exp_clo_fs1_917, margin = FALSE, par.setting =myTheme, main= list("Gap change site 1 9-17"),
+            colorkey=list(at=seq(0, 2, 1),labels=list(at=c(1, 2), 
+           labels=c( "gap closure", "gap expansion"))), scales=list(draw=FALSE)) + 
   layer_(sp.polygons(as(polygons_400$chm9_fs1, "Spatial"), fill='grey', alpha=0.5))
 
-levelplot(exp_clo_fs1_1721, margin = FALSE, par.setting =myTheme, main= list("Gap change fs1 17-21"),
+levelplot(exp_clo_fs1_1721, margin = FALSE, par.setting =myTheme, main= list("Gap change site 1 17-21"),
           colorkey=list(at=seq(0, 2, 1),labels=list(at=c(1, 2), 
-                                                    labels=c( "gap closure", "gap expansion"))), scales=list(draw=FALSE)) +
+          labels=c( "gap closure", "gap expansion"))), scales=list(draw=FALSE)) +
   layer_(sp.polygons(as(polygons_400$chm17_fs1, "Spatial"), fill='grey', alpha=0.5))
 
 #fs2
-levelplot(exp_clo_fs2_917, margin = FALSE, par.setting =myTheme, main= list("Gap change fs2 9-17"),
-          colorkey=list(at=seq(0, 3, 1),labels=list(at=c(1, 2, 3), 
-                                                    labels=c("gap area newly or not anymore detetcted", "gap expansion", "gap closure"))), scales=list(draw=FALSE))
-levelplot(exp_clo_fs2_1721, margin = FALSE, par.setting =myTheme, main= list("Gap change fs2 17-21"),
-          colorkey=list(at=seq(0, 3, 1),labels=list(at=c(1, 2, 3), 
-                                                    labels=c("gap area newly or not anymore detetcted", "gap expansion", "gap closure"))), scales=list(draw=FALSE))
-#fs3
-levelplot(exp_clo_fs3_917, margin = FALSE, par.setting =myTheme, main= list("Gap change fs3 9-17"),
+wd <- "i:/Fonda/workspace/berchtesgaden/gaps/plots/"
+setwd(wd)
+tiff("gap_change_2_917.tiff", units="in", width=12, height=8, res=300)
+levelplot(exp_clo_fs2_917, margin = FALSE, par.setting =myTheme, main= list("Gap change site 2 9-17"),
           colorkey=list(at=seq(0, 2, 1),labels=list(at=c(1, 2), 
-                                                    labels=c( "gap closure", "gap expansion"))), scales=list(draw=FALSE)) + 
-  layer_(sp.polygons(as(polygons_400$chm9_fs3, "Spatial"), fill='grey', alpha=0.5))
+          labels=c( "gap closure", "gap expansion"))), scales=list(draw=FALSE)) +
+  layer_(sp.polygons(as(polygons_400$chm9_fs2, "Spatial"), fill='grey', alpha=0.5))
+dev.off()
 
-levelplot(exp_clo_fs3_1721, margin = FALSE, par.setting =myTheme, main= list("Gap change fs3 17-21"),
-          colorkey=list(at=seq(0, 3, 1),labels=list(at=c(1, 2, 3), 
-                                                    labels=c("gap area newly or not anymore detetcted", "gap expansion", "gap closure"))), scales=list(draw=FALSE))
-#fs4
-levelplot(exp_clo_fs4_917, margin = FALSE, par.setting =myTheme, main= list("Gap change fs4 9-17"),
+tiff("gap_change_2_1721.tiff", units="in", width=12, height=8, res=300)
+levelplot(exp_clo_fs2_1721, margin = FALSE, par.setting =myTheme, main= list("Gap change site 2 17-21"),
           colorkey=list(at=seq(0, 2, 1),labels=list(at=c(1, 2), 
-                                                    labels=c( "gap closure", "gap expansion"))), scales=list(draw=FALSE)) + 
+          labels=c( "gap expansion", "gap closure"))), scales=list(draw=FALSE))+
+  layer_(sp.polygons(as(polygons_400$chm17_fs2, "Spatial"), fill='grey', alpha=0.5))
+dev.off()
+
+#fs3
+tiff("gap_change_3_917.tiff", units="in", width=12, height=8, res=300)
+levelplot(exp_clo_fs3_917, margin = FALSE, par.setting =myTheme, main= list("Gap change site 3 9-17"),
+          colorkey=list(at=seq(0, 2, 1),labels=list(at=c(1, 2), 
+          labels=c( "gap closure", "gap expansion"))), scales=list(draw=FALSE)) + 
+  layer_(sp.polygons(as(polygons_400$chm9_fs3, "Spatial"), fill='grey', alpha=0.5))
+dev.off()
+
+tiff("gap_change_3_1721.tiff", units="in", width=12, height=8, res=300)
+levelplot(exp_clo_fs3_1721, margin = FALSE, par.setting =myTheme, main= list("Gap change site 3 17-21"),
+          colorkey=list(at=seq(0, 2, 1),labels=list(at=c(1, 2, 3), 
+           labels=c( "gap expansion", "gap closure"))), scales=list(draw=FALSE))
+dev.off()
+#fs4
+levelplot(exp_clo_fs4_917, margin = FALSE, par.setting =myTheme, main= list("Gap change site 4 9-17"),
+          colorkey=list(at=seq(0, 2, 1),labels=list(at=c(1, 2), 
+          labels=c( "gap closure", "gap expansion"))), scales=list(draw=FALSE)) + 
   layer_(sp.polygons(as(polygons_400$chm9_fs4, "Spatial"), fill='grey', alpha=0.5))
 
-levelplot(exp_clo_fs4_1721, margin = FALSE, par.setting =myTheme, main= list("Gap change fs4 17-21"),
+levelplot(exp_clo_fs4_1721, margin = FALSE, par.setting =myTheme, main= list("Gap change site 4 17-21"),
           colorkey=list(at=seq(0, 2, 1),labels=list(at=c(1, 2), 
-                                                    labels=c( "gap closure", "gap expansion"))), scales=list(draw=FALSE)) + 
+          labels=c( "gap closure", "gap expansion"))), scales=list(draw=FALSE)) + 
   layer_(sp.polygons(as(polygons_400$chm17_fs4, "Spatial"), fill='grey', alpha=0.5))
+
 
 # --- analyze gap closure and gap expansion 
 
@@ -231,7 +267,7 @@ get_cloexp_df <- function(chm, change, fs, ts) {
   df <- as.data.frame(stack, na.rm=FALSE)
   names(df)<- c("chm", "gap_change_class")
   df <- df[rowSums(is.na(df)) != ncol(df), ] # delete pixels not in research area
-  df[df == "NaN"] <- 4 # DAs muss ich eigentlich lÃ¶schen!!!!!
+  #df[df == "NaN"] <- 4 # DAs muss ich eigentlich löschen!!!!!
   df$site <- as.factor(fs)
   df$timestep <- as.factor(ts)
   return(df)
@@ -251,36 +287,37 @@ clo_exp_df_all <- rbind(clo_exp_df1917, clo_exp_df11721,
                         clo_exp_df3917, clo_exp_df31721,
                         clo_exp_df4917, clo_exp_df41721)
 
-# ich sollte an diesem Punkt die share der change area am gesamten Gebiet berechnen
-# dann pixel welche keine change area sind (also mit NA) rausschmeiÃŸen und die FlÃ¤chen der einzelnen change classes berechnen
+subset(clo_exp_df_all, is.na(chm)) #why are there NAs in the chm colum?
+
+# share der change area am gesamten Gebiet
+
+# clo_exp_df_summary <- clo_exp_df_all %>%
+#   group_by(gap_change_class, site, timestep) %>%
+#   summarise(area = n()/40000, 0) %>% # /40000 to get ha, change to /10000 when res 1m
+#   mutate(area_share = area/sum(area),
+#          gap_change_class = as.factor(recode(gap_change_class,
+#                                              `1`="gap area newly or not anymore detetcted", #through vegetation growth or loss
+#                                              `2`="gap expansion through vegetation loss",
+#                                              `3`="gap closure through vegetation growth",
+#                                              `4`="steady vegetation")))
 
 clo_exp_df_summary <- clo_exp_df_all %>%
   group_by(gap_change_class, site, timestep) %>%
   summarise(area = n()/40000, 0) %>% # /40000 to get ha, change to /10000 when res 1m
   mutate(area_share = area/sum(area),
          gap_change_class = as.factor(recode(gap_change_class,
-                                             `1`="gap area newly or not anymore detetcted", #through vegetation growth or loss
-                                             `2`="gap expansion through vegetation loss",
-                                             `3`="gap closure through vegetation growth",
-                                             `4`="steady vegetation")))
-
-clo_exp_df_summary <- clo_exp_df_all %>%
-  group_by(gap_change_class, site, timestep) %>%
-  summarise(area = n()/40000, 0) %>% # /40000 to get ha, change to /10000 when res 1m
-  mutate(area_share = area/sum(area),
-         gap_change_class = as.factor(recode(gap_change_class,
-                                             `1`="gap closure through vegetation growth", #through vegetation growth or loss
-                                             `2`="gap expansion through vegetation loss")),
+                                             `1`="gap closure", #through vegetation growth or loss
+                                             `2`="gap expansion")),
          years_ts = recode(timestep,
                            "9-17" = 8,
                            "17-21" = 4),
-         area_per_yr = area/years_ts)
+         area_per_yr = round(area/years_ts,2))
 
 
 
 # delete vegetation to not distort results 
 
-clo_exp_df_summary2 <- subset(clo_exp_df_summary, gap_change_class != "steady vegetation")
+clo_exp_df_summary2 <- subset(clo_exp_df_summary, gap_change_class != is.na(gap_change_class))
 
 #absolute values
 ggplot(clo_exp_df_summary2, aes(x= timestep, y= area, fill=gap_change_class, label=area )) +  
@@ -288,10 +325,153 @@ ggplot(clo_exp_df_summary2, aes(x= timestep, y= area, fill=gap_change_class, lab
   theme_minimal() +facet_wrap(~site)+
   geom_text(size = 3, position = position_stack(vjust = 0.5)) +facet_wrap(~site)
 #relative values
-ggplot(clo_exp_df_summary2, aes(x= timestep, y= area_per_yr, fill=gap_change_class, label=area )) +  
+ggplot(clo_exp_df_summary2, aes(x= timestep, y= area_per_yr, fill=gap_change_class, label=area_per_yr )) +  
   geom_bar(position="stack", stat="identity") + ylab("dynamic area in ha/yr") +
   theme_minimal() +facet_wrap(~site)+
   geom_text(size = 3, position = position_stack(vjust = 0.5)) +facet_wrap(~site)
+
+# ---- plotting for poster
+
+wd <- "i:/Fonda/workspace/berchtesgaden/gaps/plots/"
+setwd(wd)
+
+My_Theme = theme(
+  title = element_text(size = 18),
+  axis.title.x = element_text(size = 18),
+  axis.text.x = element_text(size = 18),
+  axis.text.y = element_text(size = 13),
+  axis.title.y = element_text(size = 18),
+  legend.key.height = unit(1, 'cm'),
+  legend.title = element_text(size=18),
+  legend.text = element_text(size=16),
+  strip.text.x = element_text(size = 20))
+
+tiff("change_area_site.tiff", units="in", width=12, height=8, res=300)
+ggplot(clo_exp_df_summary2, aes(x= timestep, y= area_per_yr, fill=gap_change_class, label=area_per_yr )) +  
+  geom_bar(position="stack", stat="identity") +  labs( x="time step", y="dynamic area [ha/year]") +
+  theme_minimal()  +facet_grid(~site)+
+  My_Theme  +  scale_fill_brewer(palette="Dark2") + guides(fill=guide_legend(title="Change class"))
+dev.off()
+
+### --------------------analyze gap changes per NP information -------
+
+# --- load NP information 
+wd <- "i:/Fonda/workspace/berchtesgaden/focus_sites/NP_data"
+setwd(wd)
+
+foresttype <- vect("forest_type_map.shp")
+management <- vect("npb_zonierung_22_epsg25832.shp")
+
+
+# -- rasterize NP information
+
+#crate empty raster for rasterization
+r_1 <- rast()
+ext(r_1) <- ext(chm9_fs1)
+terra::res(r_1) <- terra::res(chm9_fs1)  
+terra::crs(r_1) <- terra::crs(chm9_fs1)
+r_2 <- rast()
+ext(r_2) <- ext(chm9_fs2)
+terra::res(r_2) <- terra::res(chm9_fs2)  
+terra::crs(r_2) <- terra::crs(chm9_fs2)
+r_3 <- rast()
+ext(r_3) <- ext(chm9_fs3)
+terra::res(r_3) <- terra::res(chm9_fs3)  
+terra::crs(r_3) <- terra::crs(chm9_fs3)
+r_4 <- rast()
+ext(r_4) <- ext(chm9_fs4)
+terra::res(r_4) <- terra::res(chm9_fs4)  
+terra::crs(r_4) <- terra::crs(chm9_fs4)
+
+# rasterize forest type Information
+ftype_1 <- terra::rasterize(foresttype, r_1, field="type")
+ftype_2 <- terra::rasterize(foresttype, r_2, field="type")
+ftype_3 <- terra::rasterize(foresttype, r_3, field="type")
+ftype_4 <- terra::rasterize(foresttype, r_4, field="type")
+
+# rasterize Management Information
+mtype_1 <- terra::rasterize(management, r_1, field="zone_id")
+mtype_2 <- terra::rasterize(management, r_2, field="zone_id")
+mtype_3 <- terra::rasterize(management, r_3, field="zone_id")
+mtype_4 <- terra::rasterize(management, r_4, field="zone_id")
+
+# function to convert gap and NP information into a df
+ftype <- ftype_3
+mtype <- mtype_3
+change <- exp_clo_fs3_917
+fs <- 3
+ts <- 917
+
+get_cloexp_df <- function(ftype, mtype, change, fs, ts) {
+  stack <- c(ftype, mtype, change)
+  df <- as.data.frame(stack)
+  names(df)<- c("forest_type", "management", "gap_change_class")
+  #df <- df[rowSums(is.na(df)) != ncol(df), ] # delete pixels not in research area
+  #df[df == "NaN"] <- 4 # DAs muss ich eigentlich löschen!!!!!
+  df$site <- as.factor(fs)
+  df$timestep <- as.factor(ts)
+  return(df)
+}
+
+get_cloexp_df <- function(ftype, change, fs, ts) {
+  stack <- c(ftype, change)
+  df <- as.data.frame(stack)
+  names(df)<- c("forest_type", "gap_change_class")
+  #df <- df[rowSums(is.na(df)) != ncol(df), ] # delete pixels not in research area
+  #df[df == "NaN"] <- 4 # DAs muss ich eigentlich löschen!!!!!
+  df$site <- as.factor(fs)
+  df$timestep <- as.factor(ts)
+  return(df)
+}
+
+clo_exp_df1917 <- get_cloexp_df(ftype_1,mtype_1, exp_clo_fs1_917, 1, "9-17") #fs1
+clo_exp_df11721 <- get_cloexp_df(ftype_1,mtype_1, exp_clo_fs1_1721, 1, "17-21")
+clo_exp_df2917 <- get_cloexp_df(ftype_2,mtype_2, exp_clo_fs2_917, 2, "9-17") #fs2
+clo_exp_df21721 <- get_cloexp_df(ftype_2,mtype_2, exp_clo_fs2_1721, 2, "17-21")
+clo_exp_df3917 <- get_cloexp_df(ftype_3, mtype_3, exp_clo_fs3_917, 3, "9-17") #fs3
+clo_exp_df31721 <- get_cloexp_df(ftype_3, mtype_3,exp_clo_fs3_1721, 3, "17-21")
+clo_exp_df4917 <- get_cloexp_df(ftype_4, mtype_4,exp_clo_fs4_917, 4, "9-17") #fs4
+clo_exp_df41721 <- get_cloexp_df(ftype_4,mtype_4, exp_clo_fs4_1721, 4, "17-21")
+
+clo_exp_df_all <- rbind(clo_exp_df1917, clo_exp_df11721,
+                        clo_exp_df2917, clo_exp_df21721,
+                        clo_exp_df3917, clo_exp_df31721,
+                        clo_exp_df4917, clo_exp_df41721)
+
+
+
+clo_exp_df_summary <- clo_exp_df_all %>%
+  group_by(gap_change_class, site, timestep, forest_type, management) %>%
+  summarise(area = n()/40000, 0) %>% # /40000 to get ha, change to /10000 when res 1m
+  mutate(area_share = area/sum(area),
+         gap_change_class = as.factor(recode(gap_change_class,
+                                             `1`="gap closure", 
+                                             `2`="gap expansion")),
+         management = as.factor(recode(management,
+                                      `2`="buffer zone",
+                                      `4`="core zone")),
+         years_ts = recode(timestep,
+                           "9-17" = 8,
+                           "17-21" = 4),
+         area_per_yr = round(area/years_ts,2))
+
+
+wd <- "i:/Fonda/workspace/berchtesgaden/gaps/plots/"
+setwd(wd)
+
+tiff("change_area_ftype.tiff", units="in", width=12, height=8, res=300)
+ggplot(clo_exp_df_summary, aes(x= timestep, y= area_per_yr, fill=gap_change_class )) +  
+  geom_bar(position="stack", stat="identity") +  labs( x="time step", y="dynamic area [ha/year]") +
+  theme_minimal()  +facet_grid(~forest_type)+
+  My_Theme  +  scale_fill_brewer(palette="Dark2")+ guides(fill=guide_legend(title="Change class"))
+dev.off()
+
+tiff("change_area_management.tiff", units="in", width=12, height=8, res=300)
+ggplot(clo_exp_df_summary, aes(x= timestep, y= area_per_yr, fill=gap_change_class )) +  
+  geom_bar(position="stack", stat="identity") +  labs(x="time step", y="dynamic area [ha/year]") +
+  theme_minimal()  +facet_grid(~management)+
+  My_Theme  +  scale_fill_brewer(palette="Dark2")+ guides(fill=guide_legend(title="Change class"))
+dev.off()
 
 # --- classify trajectories ---
 
@@ -395,17 +575,17 @@ pl
 trajectories_fs1_df1 <- as.data.frame(trajectories_fs1) %>%
   group_by(lyr.1) %>%
   tally() %>%
-  mutate(area = (n * res(trajectories_fs1)[1] * res(trajectories_fs1)[2])/10000,
-site = as.factor(1),
-trajectory = as.factor(recode(lyr.1,
-                              `1`="steady vegetation",
-                              `2`="steady vegetation - gap expansion",
-                              `3`="gap expansion - gap closure",
-                              `4`= "gap closure - steady vegetation",
-                              `5`="gap expansion - steady gap",
-                              `6`="gap closure - gap expansion",
-                              `7`="steady gap - gap closure ",
-                              `8`="steady gap ")))
+  mutate(area = (n * res(trajectories_fs1)[1] * res(trajectories_fs1)[2])/10000),
+         site = as.factor(1),
+         trajectory = as.factor(recode(lyr.1,
+                                       `1`="steady vegetation",
+                                       `2`="steady vegetation - gap expansion",
+                                       `3`="gap expansion - gap closure",
+                                       `4`= "gap closure - steady vegetation",
+                                       `5`="gap expansion - steady gap",
+                                       `6`="gap closure - gap expansion",
+                                       `7`="steady gap - gap closure ",
+                                       `8`="steady gap ")))
 
 ggplot(trajectories_fs1_df1, aes(x=trajectory, y=area_ha)) + 
   geom_bar(stat = "identity") + coord_flip() + theme_minimal()
@@ -485,7 +665,7 @@ aggregate_trajectories <- function(trajectories){
   trajectories_agg [trajectories == 4 | trajectories == 7 ] <- 3 # gap closure
   trajectories_agg [trajectories == 8 ] <- 4                    #steady gap
   trajectories_agg [trajectories == 3 | trajectories == 6 ] <- 5 #twice state change
-  
+
   return(trajectories_agg )
 } 
 
@@ -1044,7 +1224,7 @@ GetChangeCHM <- function(chm1, chm2, gapchange) { #chm1 ist newer, chm2 is older
 
 diff_fs1_917 <- GetChangeCHM(chm17_fs1, chm9_fs1, gap_stack_fs1$gap_changes_fs1_917)
 diff_fs1_1721 <- GetChangeCHM(chm21_fs1, chm17_fs1, gap_stack_fs1$gap_changes_fs1_1721)
-# fÃ¼r alle sites und Zeitschritte berechnen
+# für alle sites und Zeitschritte berechnen
 
 # 2009-2017
 change_vertical_bins1 <- c(gap_stack_fs1$gap_change_dir1_917, diff_fs1_917, chm9_fs1 )
@@ -1082,8 +1262,8 @@ ggplot(change_vertical_bins[ which(change_vertical_bins$Change_class=='height ga
   geom_boxplot() + theme_minimal()
 
 
-# fÃ¼r beide Zeitschritte in einen DF
-# fÃ¼r alle sites und Zeitschritte (innerhalb des plots zwischen Zeitschritten unterscheiden und mit facet-wrap zwischen sites)
+# für beide Zeitschritte in einen DF
+# für alle sites und Zeitschritte (innerhalb des plots zwischen Zeitschritten unterscheiden und mit facet-wrap zwischen sites)
 
 # --- trace individual gaps ----
 
@@ -1133,22 +1313,22 @@ df2[df2 == "NaN"] <- 999
 
 # Chart 1
 pl2 <- ggplot(df2, aes(x = x
-                       , next_x = next_x
-                       , node = node
-                       , next_node = next_node
-                       , fill = factor(node)
-                       , label = node)
+                     , next_x = next_x
+                     , node = node
+                     , next_node = next_node
+                     , fill = factor(node)
+                     , label = node)
 )
 pl2 <- pl2 +geom_sankey(flow.alpha = 0.5
-                        , node.color = "black"
-                        ,show.legend = FALSE)
+                      , node.color = "black"
+                      ,show.legend = FALSE)
 pl2 <- pl2 +geom_sankey_label(size = 3, color = "black", fill= "white", hjust = -0.5)
 pl2 <- pl2 +  theme_bw()
 pl2 <- pl2 + theme(legend.position = "none")
 pl2 <- pl2 +  theme(axis.title = element_blank()
-                    , axis.text.y = element_blank()
-                    , axis.ticks = element_blank()  
-                    , panel.grid = element_blank())
+                  , axis.text.y = element_blank()
+                  , axis.ticks = element_blank()  
+                  , panel.grid = element_blank())
 pl2 <- pl2 + scale_fill_viridis_d(option = "inferno")
 pl2 <- pl2 + labs(title = "Sankey diagram for gaps")
 pl2 <- pl2 + labs(subtitle = "flow unit is pixels per gap")
