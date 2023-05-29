@@ -51,10 +51,11 @@ exp_clo_917 <- rast("processed/sensitivity/exp_clo_917_cn2cr2_mmu100n8_filtered.
 exp_clo_1721 <- rast("processed/sensitivity/exp_clo_1721_cn2cr2_mmu100n8_filtered.tif")
 
 chm9 <- rast("F:/Projects/CanopyDynamicsBDG/data/CHM_data/chm9_artifacts_masked.tif")
-chm9 <- crop(chm9, chm21)
 chm17 <- rast("F:/Projects/CanopyDynamicsBDG/data/CHM_data/chm17_artifacts_masked.tif")
-chm17 <- crop(chm17, chm21)
 chm21 <- rast("F:/Projects/CanopyDynamicsBDG/data/CHM_data/chm21_artifacts_masked.tif")
+
+chm9 <- crop(chm9, chm21)
+chm17 <- crop(chm17, chm21)
 
 # get vegetation changes
 diff917 <- chm17-chm9
