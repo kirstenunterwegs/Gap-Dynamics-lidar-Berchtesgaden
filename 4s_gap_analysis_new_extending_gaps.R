@@ -344,6 +344,9 @@ gap_features_917$year <- as.factor("9-17")
 gap_features921 <- rbind(gap_features_917, gap_features_1721)
 gap_features921 <- subset(gap_features921, new.exp %in% c("new", "expanding")) #exclude stable gaps for the analysis
 gap_features921 <- gap_features921[gap_features921$elevation != "1800-2000",]
+gap_features921 <- gap_features921[!is.na(gap_features921$elevation),] # only optional if there are NAs in the df
+
+
 #----!!! change from 400 to 100 !!!
 gap_features921 <- gap_features921[gap_features921$area.ha >= 0.01,] #delete gaps smaller than 100m2, as they emerged out of the cropping of the reserach area
 
@@ -695,7 +698,7 @@ ggplot(gap.creation, aes(x=new.exp , y=median.scaled)) +
   geom_point(shape = 21, fill = "black",color = "black", size = 10) +
   #facet_wrap(~forest_type) +
   theme_minimal()+ coord_flip()  +  My_Theme +
-  labs(x = "gap creation mechanism", y= "area of annual gap creation [ha/yr/100 ha]")+ 
+  labs(x = "gap creation mechanism", y= "annual rate of gap creation [ha/yr/100 ha]")+ 
   geom_pointrange(aes(ymin=median.scaled-q5_ascaled, ymax=median.scaled+q95_ascaled), linewidth = 2)
 dev.off()
 
