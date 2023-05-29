@@ -116,8 +116,9 @@ terra::writeRaster(gap_closure_mechanism1721, "processed/sensitivity/gap_closure
 ###################################################################################################################
 
 #merge closure mechanism with gaps
-gap_closure_mechanism917 <- rast( "processed/sensitivity/gap_closure_mechanism917_new.tif")
-gaps2009 <- rast("processed/gaps_sensitivity/berchtesgaden_2009_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
+gap_closure_mechanism917 <- rast( "processed/sensitivity/gap_closure_mechanism917.tif")
+gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu100.sensitivity.tif") # layer have been cropped previously to the research area
+gaps2009<- gap_stack[[1]]
 
 gaps2009 <- crop(gaps2009, gap_closure_mechanism917)
 gap_closure_mechanism_stack <- c(gap_closure_mechanism917, gaps2009)
@@ -145,15 +146,15 @@ gap_clo_per_id <-  gap_closure_mechanism_stack.df %>% group_by(gap_id) %>%
   count(closure_mechanism) %>% 
   mutate(gap_area = sum(n))
 
-#drop gaps < 400 m2 (emerge through masking of research area, as large gaps transcending management area or elevation lines get cut)
-gap_clo_per_id <- gap_clo_per_id[gap_clo_per_id$gap_area >= 400,]
+#drop gaps < 400 m2 (emerge through masking of research area, as large gaps transcending management area or elevation lines get cut) #change to 100 for sensitivity!
+gap_clo_per_id <- gap_clo_per_id[gap_clo_per_id$gap_area >= 100,]
 
 #calculate share of closure mechanism on whole gap area
 gap_clo_per_id$closure_share = round(gap_clo_per_id$n/gap_clo_per_id$gap_area,2) 
 
 # identify gaps not closing
 gap_clo_per_id$contraction <- ifelse(is.na(gap_clo_per_id$closure_mechanism) & gap_clo_per_id$closure_share >= 0.99, 1,0 )
-sum(gap_clo_per_id$contraction) # 0 gaps do not experience any closure from 2009-2017 (previously 7, maybe the masking cut off some gap areas)
+sum(gap_clo_per_id$contraction) # 2 gaps do not experience any closure from 2009-2017 (previously 7, maybe the masking cut off some gap areas)
 
 gap_clo_per_id_nona <- gap_clo_per_id %>% drop_na(closure_mechanism) #drop pixels not closing
 gap_clo_per_id_nona$closure_mechanism <- as.factor(gap_clo_per_id_nona$closure_mechanism) #make closure mechanism as factor
@@ -182,9 +183,10 @@ gap_clo_per_id_nona <- gap_clo_per_id_nona.sub %>% group_by(gap_id) %>%
 # bin gap areas and get closure share per gap size bin
 gap_clo_per_id_nona_917<-gap_clo_per_id_nona %>% 
   mutate(gap_area.ha = gap_area/10000,
-         gap_area_bins = (cut(gap_area.ha, breaks = c(0.039,0.1,0.2, 0.3, 0.4, 0.5,0.6,0.7,0.8,0.9,1,45))))%>% 
+         gap_area_bins = (cut(gap_area.ha, breaks = c(0.009, 0.04,0.1,0.2, 0.3, 0.4, 0.5,0.6,0.7,0.8,0.9,1,45))))%>% 
   mutate(gap.size = as.factor(recode(gap_area_bins,
-                                     `(0.039,0.1]`="0.04-0.1",
+                                     `(0.009,0.04]`="0.01-0.04",
+                                     `(0.04,0.1]`="0.04-0.1",
                                      `(0.1,0.2]`="0.1-0.2",
                                      `(0.2,0.3]`="0.2-0.3",
                                      `(0.3,0.4]`="0.3-0.4",
@@ -201,8 +203,10 @@ gap_clo_per_id_nona_917<-gap_clo_per_id_nona %>%
 ###################################################################################################################
 
 # #merge closure mechanism with gaps
-gap_closure_mechanism1721 <- rast("processed/sensitivity/gap_closure_mechanism1721_new.tif")
-gaps2017 <- rast("processed/gaps_sensitivity/berchtesgaden_2017_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
+gap_closure_mechanism1721 <- rast("processed/sensitivity/gap_closure_mechanism1721.tif")
+gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu100.sensitivity.tif") # layer have been cropped previously to the research area
+gaps2017<- gap_stack[[2]]
+
 
 gaps2017 <- crop(gaps2017, gap_closure_mechanism1721)
 gap_closure_mechanism_stack_1721 <- c(gap_closure_mechanism1721, gaps2017)
@@ -227,7 +231,7 @@ gap_clo_per_id <-  gap_closure_mechanism_stack.df_1721 %>% group_by(gap_id) %>%
   mutate(gap_area = sum(n))
 
 #drop gaps < 400 m2 (emerge through masking of research area, as large gaps transcending management area or elevation lines get cut)
-gap_clo_per_id <- gap_clo_per_id[gap_clo_per_id$gap_area >= 400,]
+gap_clo_per_id <- gap_clo_per_id[gap_clo_per_id$gap_area >= 100,]
 
 #calculate share of closure mechanism on whole gap area
 gap_clo_per_id$closure_share = round(gap_clo_per_id$n/gap_clo_per_id$gap_area,2) 
@@ -262,9 +266,10 @@ gap_clo_per_id_nona <- gap_clo_per_id_nona.sub %>% group_by(gap_id) %>%
 # bin gap areas and get closure share per gap size bin
 gap_clo_per_id_nona_1721<-gap_clo_per_id_nona %>% 
   mutate(gap_area.ha = gap_area/10000,
-         gap_area_bins = (cut(gap_area.ha, breaks = c(0.039,0.1,0.2, 0.3, 0.4, 0.5,0.6,0.7,0.8,0.9,1,45))))%>% 
+         gap_area_bins = (cut(gap_area.ha, breaks = c(0.009,0.04,0.1,0.2, 0.3, 0.4, 0.5,0.6,0.7,0.8,0.9,1,45))))%>% 
   mutate(gap.size = as.factor(recode(gap_area_bins,
-                                     `(0.039,0.1]`="0.04-0.1",
+                                     `(0.009,0.04]`="0.01-0.04",
+                                     `(0.04,0.1]`="0.04-0.1",
                                      `(0.1,0.2]`="0.1-0.2",
                                      `(0.2,0.3]`="0.2-0.3",
                                      `(0.3,0.4]`="0.3-0.4",
@@ -310,6 +315,7 @@ gap_clo_NP_91721 <- merge(x = gap_clo_NP_91721, y = stats, by = c("gap_id", "tim
 
 # exclude gaps in elevation band above 1800 m
 gap_clo_NP_91721 <- gap_clo_NP_91721[gap_clo_NP_91721$elevation != "1800-2000",]
+gap_clo_NP_91721 <- gap_clo_NP_91721[!is.na(gap_clo_NP_91721$elevation),] # only optional if there are NAs in the df
 
 #saveRDS(gap_clo_NP_91721, "processed/closure/updated/gap_closure_elevation.rds")
 
@@ -371,7 +377,7 @@ gap_clo$elevation <- as.factor(gap_clo$elevation)
 gap_clo$forest_type <- ordered(gap_clo$forest_type, levels = c("Beech", "Spruce-fir-beech","Spruce","Larch-Pine"))
 gap_clo$forest_type <- factor(gap_clo$forest_type,levels=rev(levels(gap_clo$forest_type)))
 
-gap_clo$gap.size <- ordered(gap_clo$gap.size, levels = c("0.04-0.1", "0.1-0.2",  "0.2-0.3",  "0.3-0.4",  "0.4-0.5",  "0.5-0.6",  "0.6-0.7",  "0.7-0.8",  "0.8-0.9",  "0.9-1", ">1" ))
+gap_clo$gap.size <- ordered(gap_clo$gap.size, levels = c("0.01-0.04","0.04-0.1", "0.1-0.2",  "0.2-0.3",  "0.3-0.4",  "0.4-0.5",  "0.5-0.6",  "0.6-0.7",  "0.7-0.8",  "0.8-0.9",  "0.9-1", ">1" ))
 
 saveRDS(gap_clo, "processed/sensitivity/clo_analysis_ready.rds")
 gap_clo <- readRDS("processed/sensitivity/clo_analysis_ready.rds")
@@ -395,7 +401,7 @@ My_Theme = theme(
 require(scales)
 library(viridis)
 
-wd <- "processed/sensitivity/results/gap_closure"
+wd <- "processed/sensitivity/results/"
 setwd(wd)
 
 
@@ -478,6 +484,22 @@ ggplot(gap_clo, aes(x=gap.size , y=clo_share_annual, fill=closure_mechanism)) +
   labs(x = "gap size [ha]", y= "% of gap area closing annually", colour= "closure mechanism") +
   stat_summary(fun.data = give.n, geom = "text", fun.y = median)
 dev.off()
+
+# Create a separate dataframe with count of observations for each gap.size
+count_df <- gap_clo %>%
+  group_by(gap.size) %>%
+  summarise(n = n())
+
+# Join the count_df with gap_clo dataframe based on gap.size
+gap_clo_with_count <- gap_clo %>%
+  left_join(count_df, by = "gap.size")
+
+
+ggplot(gap_clo, aes(x=gap.size , y=clo_share_annual, fill=closure_mechanism)) +
+  geom_boxplot(position=position_dodge(width=0.9)) +
+  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
+  labs(x = "gap size [ha]", y= "% of gap area closing annually", colour= "closure mechanism")+
+  geom_text(data = count_df, aes(label = paste0("n = ", n)), vjust = -1, show.legend = FALSE)
 
 
 My_Theme = theme(
