@@ -347,7 +347,6 @@ gap_features_917 <- merge(gap_features_917, elevation[,c("gap.id","elevation")],
 gap_features_917 <- merge(gap_features_917, aspect[,c("gap.id","aspect")], by = "gap.id", all.x = TRUE)
 
 saveRDS(gap_features_917,"processed/creation/updated/gap_features_new_expanding_917.rds")
-gap_features_917 <- readRDS("processed/creation/updated/gap_features_new_expanding_917.rds")
 
 
 #2021
@@ -361,11 +360,12 @@ gap_features_1721 <- merge(gap_features_1721, elevation[,c("gap.id","elevation")
 gap_features_1721 <- merge(gap_features_1721, aspect[,c("gap.id","aspect")], by = "gap.id", all.x = TRUE)
 
 saveRDS(gap_features_1721,"processed/creation/updated/gap_features_new_expanding_1721.rds")
-gap_features_1721 <- readRDS("processed/creation/updated/gap_features_new_expanding_1721.rds")
 
 
 # analyse new and expanding gaps ----------------------------------------------------------
 
+gap_features_917 <- readRDS("processed/creation/updated/gap_features_new_expanding_917.rds")
+gap_features_1721 <- readRDS("processed/creation/updated/gap_features_new_expanding_1721.rds")
   
 #calculate amount of expansion (check with MA) 2017
 sum(gap_features_917$exp.area.ha)/8 # 9.48  fits values of MA (9.89 ha/yr, as I excluded areas >1800m)
@@ -741,40 +741,29 @@ dev.off()
 
 My_Theme = theme(
   title = element_text(size = 18),
-  axis.title.x = element_text(size = 30),
+  axis.title.x = element_text(size = 26),
   axis.text.x = element_text(size = 24,angle = 45, hjust=1),
   axis.text.y = element_text(size = 24),
-  axis.title.y = element_text(size = 30),
+  axis.title.y = element_text(size = 26),
   legend.key.height = unit(1, 'cm'),
-  legend.title = element_text(size=30),
-  legend.text = element_text(size=30),
+  legend.title = element_text(size=26),
+  legend.text = element_text(size=26),
   strip.text.x = element_text(size = 20),
   panel.spacing = unit(2, "lines"),
-  legend.position = c(0.8, 0.8))
+  legend.position = c(0.25, 0.8))
 
 #only gap creation area
-tiff("new_exp_density_creation.tiff", units="in", width=12, height=8, res=300)
-ggplot(gap_features921, aes(x=exp.area.ha, fill=factor(new.exp))) + geom_density(alpha=.5) +
-  # scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x), labels = label_number(accuracy = 0.1))+
-  scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),labels = trans_format("log10", math_format(10^.x)))+
-  guides(fill=guide_legend(title="mechanism of gap creation")) +
-  theme_classic() +
-  My_Theme +  
-  #scale_fill_brewer(palette = "Dark2")+ 
-  scale_fill_colorblind()+
-  labs( x="gap creation area in log10 [ha]") 
-dev.off()
 
 tiff("new_exp_density_creation.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap_features921, aes(x=exp.area.ha, fill=factor(new.exp))) + geom_density(alpha=.5) +
   # scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x), labels = label_number(accuracy = 0.1))+
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),labels = trans_format("log10", math_format(10^.x)))+
   guides(fill=guide_legend(title="creation mechanism")) +
-  theme_classic() +
+  theme_base() + #instead of theme_classic()
   My_Theme +  
   #scale_fill_brewer(palette = "Dark2")+ 
   scale_fill_colorblind()+
-  labs( x="size of gap creation area in log10 [ha]") 
+  labs( x="size of gap creation area in log10 ( ha )") 
 dev.off()
 
 # range of new and expanding gaps
@@ -792,6 +781,7 @@ gap_features921 %>% group_by(new.exp) %>%
 
 gap_features921 %>% group_by(new.exp) %>% 
   summarise(range = max(exp.area.ha)-min(exp.area.ha),
+            sum = sum(exp.area.ha),
             mean.ha = round(mean(exp.area.ha),2),
             quant1 = round(quantile(exp.area.ha, probs = q[1]),4),
             quant25 = round(quantile(exp.area.ha, probs = q[2]),3), 
@@ -857,10 +847,11 @@ dev.off()
 
 My_Theme = theme(
   title = element_text(size = 18),
-  axis.title.x = element_text(size = 55, margin = margin(t = 60), hjust = 0.5),
-  axis.text.x = element_text(size = 55,angle = 45, hjust=1),
-  axis.text.y = element_text(size = 1),
-  axis.title.y = element_text(size = 40),
+  axis.title.x = element_text(size = 60, margin = margin(t =90), hjust = 0.5),
+  axis.text.x = element_text(size = 60,angle = 45, hjust=1),
+  axis.text.y = element_blank(),
+  axis.title.y = element_blank(),
+  axis.ticks.y = element_blank(),
   legend.key.height = unit(1, 'cm'),
   legend.title = element_text(size=30),
   legend.text = element_text(size=30),
@@ -871,13 +862,14 @@ My_Theme = theme(
 tiff("area_ new_exp_v2.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap.creation, aes(x=new.exp , y=median.scaled, colour= new.exp, group= new.exp, fill=new.exp)) + 
   geom_point(shape = 21, size = 16) +
-  theme_minimal()+ coord_flip() +
+  theme_classic()+ coord_flip() + #instead of theme_minimal()
   scale_color_colorblind( name = "creation mechanism", guide = "none")+
   scale_fill_colorblind(name = "creation mechanism", guide = "none") +  
   My_Theme +
-  labs(x = "", y= expression( "annual rate of gap creation \n [ha/yr/100 ha]"))+ 
+  labs(x = "", y= expression( "annual rate of gap creation \n ( ha / 100 ha )"))+ 
   geom_pointrange(aes(ymin=median.scaled-q5_ascaled, ymax=median.scaled+q95_ascaled), linewidth = 4)
 dev.off()
+
 
 
 
@@ -941,13 +933,13 @@ dev.off()
 
 My_Theme = theme(
   title = element_text(size = 18),
-  axis.title.x = element_text(size = 30),
+  axis.title.x = element_text(size = 26),
   axis.text.x = element_text(size = 24,angle = 45, hjust=1),
   axis.text.y = element_text(size = 24),
-  axis.title.y = element_text(size = 30),
+  axis.title.y = element_text(size = 26),
   legend.key.height = unit(1, 'cm'),
-  legend.title = element_text(size=30),
-  legend.text = element_text(size=30),
+  legend.title = element_text(size=26),
+  legend.text = element_text(size=26),
   strip.text.x = element_text(size = 20),
   panel.spacing = unit(2, "lines"),
   legend.position = c(0.75, 0.2))
@@ -962,7 +954,8 @@ ggplot(forest_gap, aes(x=forest_type , y=median_ascaled, fill=new.exp)) +
   scale_fill_manual(values = c("#E69F00", "black", "#56B4E9"), name = "creation mechanism")+
   theme_minimal()+ coord_flip() +
   My_Theme +
-  labs(x = "forest type", y= "annual rate of gap creation [ha/yr/100 ha]", fill= "creation mechanism", shape = "creation mechanism") + 
+  labs(x = "forest type", 
+       y= bquote("annual rate of gap creation (" ~ .("ha") ~ "/" ~  .("100 ha") ~ ")"), fill= "creation mechanism", shape = "creation mechanism") + 
   geom_pointrange(aes(ymin=median_ascaled-q5_ascaled, ymax=median_ascaled+q95_ascaled, colour = new.exp), 
                   position = position_dodge(width=0.7), linewidth = 1.5)
 dev.off()

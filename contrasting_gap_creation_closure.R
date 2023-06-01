@@ -79,10 +79,10 @@ creation.closure.elev.class <- creation.closure.scaled %>% mutate(elev.class = a
 
 My_Theme = theme(
   title = element_text(size = 18),
-  axis.title.x = element_text(size = 28),
+  axis.title.x = element_text(size = 28, margin = margin(t =20)),
   axis.text.x = element_text(size = 28),
   axis.text.y = element_text(size = 28),
-  axis.title.y = element_text(size = 28),
+  axis.title.y = element_text(size = 28, margin = margin(r =20)),
   legend.key.height = unit(1, 'cm'),
   legend.title = element_text(size=28),
   legend.text = element_text(size=24),
@@ -101,14 +101,15 @@ ggplot(creation.closure.scaled, aes(x=gap.creation.ha.scaled, y=gap.closure.ha.s
   scale_color_brewer(palette = "BrBG")+ labs( x="gap creation [ha/100ha]", y= "gap closure [ha/100ha]", color="elevation [m]" )
 dev.off()
 
-tiff("creation_closure_elevation.class.tiff", units="in", width=12, height=8, res=300)
+tiff("creation_closure_elevation.class.tiff", units="in", width=13, height=8, res=300)
 ggplot(creation.closure.elev.class, aes(x=gap.creation.ha.scaled, y=gap.closure.ha.scaled, col=elev.class)) + 
-  geom_point(size=8)+
+  geom_point(size=9)+
   geom_abline() +
   xlim(0,24.5)+ ylim(0,24.5) +
   theme_classic()+My_Theme +
   #scale_color_brewer(palette = "Set1")+ 
   scale_color_manual(values = rev(wes_palette("Chevalier1", n = 3)))+ #GrandBudapest1  Moonrise1
-  labs( x="gap creation [ha/100ha]", y= "gap closure [ha/100ha]", color="elevation zone" )
+  labs( x="gap creation  (ha / 100 ha )", y= "gap closure (ha / 100 ha )", color="elevation zone" ) +
+  xlim(4.25,25) + ylim(4.25,25)
 dev.off()
 
