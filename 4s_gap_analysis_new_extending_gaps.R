@@ -19,24 +19,31 @@ setwd(wd)
 
 # --- load classified Gap layers of new and expanding gaps ----
 
-gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu100.sensitivity.tif") # layer have been cropped previously to the research area
+#gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu100.sensitivity.tif") # layer have been cropped previously to the research area
+gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu400.sensitivity.tif") # layer have been cropped previously to the research area
 gaps2017.id<- gap_stack[[2]]
 gaps2021.id<- gap_stack[[3]]
 
 # new-expanded classification
 
-gaps2017 <- rast("processed/sensitivity/gaps2017_new_extended_stable_sensitivity.tif")
-gaps2021 <- rast("processed/sensitivity/gaps2021_new_extended_stable_sensitivity.tif")
+# gaps2017 <- rast("processed/sensitivity/gaps2017_new_extended_stable_sensitivity.tif") #mmu100
+# gaps2021 <- rast("processed/sensitivity/gaps2021_new_extended_stable_sensitivity.tif")
+
+gaps2017 <- rast("processed/sensitivity/version.mmu400/gaps2017_new_extended_stable_sensitivity.tif") #mmu400
+gaps2021 <- rast("processed/sensitivity/version.mmu400/gaps2021_new_extended_stable_sensitivity.tif")
 
 # crop gaps ID
 gaps2017.id <-crop(gaps2017.id, gaps2017, snap="near",mask=TRUE) 
 gaps2021.id <-crop(gaps2021.id, gaps2021, snap="near",mask=TRUE) 
 
 #load expansion and closure layer and extract only expansion areas
-exp_clo <- rast("processed/sensitivity/exp_clo_917_cn2cr2_mmu100n8_filtered.tif")
+
+#exp_clo <- rast("processed/sensitivity/exp_clo_917_cn2cr2_mmu100n8_filtered.tif")
+exp_clo <- rast("processed/sensitivity/version.mmu400/exp_clo_917_cn2cr2_mmu400n8_filtered.tif")
 exp <- classify(exp_clo, cbind(1, NA)) #replace 1=closure with NA to get only expansion areas
 
-exp_clo1721 <- rast("processed/sensitivity/exp_clo_1721_cn2cr2_mmu100n8_filtered.tif")
+#exp_clo1721 <- rast("processed/sensitivity/exp_clo_1721_cn2cr2_mmu100n8_filtered.tif")
+exp_clo1721 <- rast("processed/sensitivity/version.mmu400/exp_clo_1721_cn2cr2_mmu400n8_filtered.tif")
 exp1721 <- classify(exp_clo1721, cbind(1, NA)) #replace 1=closure with NA to get only expansion areas
 
 # --- load NP information 
@@ -70,13 +77,11 @@ stack2017 <- c(gaps2017.id, gaps2017, exp, foresttype , elevation.below1800, asp
 names(stack2017) <- c("gap.id", "new_extended", "expansion", "forest_type", "elevation", "aspect")
 
 stack2017 <- mask(stack2017, foresttype)
-# stack2017 <- mask(stack2017, core.zone)
-# stack2017 <- mask(stack2017, closed.forest)
-# stack2017 <- mask(stack2017, elevation.below1800)
 
-writeRaster(stack2017, "processed/sensitivity/stack.2017.all.gap.information.expansion_sensitivity.tif")
-gap_stack_2017 <- rast("processed/sensitivity/stack.2017.all.gap.information.expansion_sensitivity.tif")
 
+# writeRaster(stack2017, "processed/sensitivity/stack.2017.all.gap.information.expansion_sensitivity.tif")
+# gap_stack_2017 <- rast("processed/sensitivity/stack.2017.all.gap.information.expansion_sensitivity.tif")
+gap_stack_2017 <- stack2017
 
 df <- as.data.frame(gap_stack_2017, na.rm = FALSE) 
 
@@ -84,7 +89,8 @@ df1 <- df[!is.na(df$gap.id),] #expansion could only take place where there is a 
 # df1 <- df1[!is.na(df1$forest_type),] # exclude all areas with no forest type information
 # df1 <- df1[!is.na(df1$elevation),]# exclude all areas > 1800 m (NA in this case, as it was re-coded above) 
 
-write_rds(df1, "processed/sensitivity/stack_2017_new_exp_df.rds")
+#write_rds(df1, "processed/sensitivity/stack_2017_new_exp_df.rds")
+write_rds(df1, "processed/sensitivity/version.mmu400/stack_2017_new_exp_df.rds")
 
 #2021
 
@@ -92,12 +98,11 @@ stack21 <- c(gaps2021.id, gaps2021, exp1721, foresttype, elevation.below1800, as
 names(stack21) <- c("gap.id", "new_extended", "expansion", "forest_type", "elevation", "aspect")
 
 stack21 <- mask(stack21, foresttype)
-# stack21 <- mask(stack21, core.zone)
-# stack21 <- mask(stack21, closed.forest)
-# stack21 <- mask(stack21, elevation.below1800)
 
-writeRaster(stack21, "processed/sensitivity/stack.2021.all.gap.information.expansion_sensitivity.tif", overwrite=T)
-gap_stack_2021 <- rast("processed/sensitivity/stack.2021.all.gap.information.expansion_sensitivity.tif")
+
+# writeRaster(stack21, "processed/sensitivity/stack.2021.all.gap.information.expansion_sensitivity.tif", overwrite=T)
+# gap_stack_2021 <- rast("processed/sensitivity/stack.2021.all.gap.information.expansion_sensitivity.tif")
+gap_stack_2021 <- stack21
 
 df <- as.data.frame(gap_stack_2021, na.rm = FALSE) 
 
@@ -105,8 +110,8 @@ df2 <- df[!is.na(df$gap.id),] #expansion could only take place where there is a 
 # df2 <- df2[!is.na(df2$forest_type),] # exclude all areas with no forest type information
 # df2 <- df2[!is.na(df2$elevation),]# exclude all areas > 1800 m (na in this case, as it was recoded above) 
 
-write_rds(df2, "processed/sensitivity/stack_2021_new_exp_df.rds")
-
+#write_rds(df2, "processed/sensitivity/stack_2021_new_exp_df.rds")
+write_rds(df2, "processed/sensitivity/version.mmu400/stack_2021_new_exp_df.rds")
 
 
 #-------calculate area shares per category - not done for sensitivity
@@ -187,8 +192,11 @@ write_rds(df2, "processed/sensitivity/stack_2021_new_exp_df.rds")
 
 # --------calculate features per gap.id
 
-df1 <- readRDS( "processed/sensitivity/stack_2017_new_exp_df.rds")
-df2<- readRDS("processed/sensitivity/stack_2021_new_exp_df.rds")
+# df1 <- readRDS( "processed/sensitivity/stack_2017_new_exp_df.rds") # mmu100
+# df2<- readRDS("processed/sensitivity/stack_2021_new_exp_df.rds")
+
+df1 <- readRDS( "processed/sensitivity/version.mmu400/stack_2017_new_exp_df.rds") # mmu400
+df2<- readRDS("processed/sensitivity/version.mmu400/stack_2021_new_exp_df.rds")
 
 
 gap_features_917 <- df1 %>% group_by(gap.id) %>%
@@ -305,9 +313,8 @@ gap_features_917 <- merge(gap_features_917, ftype[,c("gap.id","forest_type")], b
 gap_features_917 <- merge(gap_features_917, elevation[,c("gap.id","elevation")], by = "gap.id", all.x = TRUE)
 gap_features_917 <- merge(gap_features_917, aspect[,c("gap.id","aspect")], by = "gap.id", all.x = TRUE)
 
-saveRDS(gap_features_917,"processed/sensitivity/gap_features_new_expanding_917.rds")
-gap_features_917 <- readRDS("processed/sensitivity/gap_features_new_expanding_917.rds")
-
+#saveRDS(gap_features_917,"processed/sensitivity/gap_features_new_expanding_917.rds")
+saveRDS(gap_features_917,"processed/sensitivity/version.mmu400/gap_features_new_expanding_917.rds")
 
 #2021
 
@@ -319,12 +326,44 @@ gap_features_1721 <- merge(gap_features_1721, ftype[,c("gap.id","forest_type")],
 gap_features_1721 <- merge(gap_features_1721, elevation[,c("gap.id","elevation")], by = "gap.id", all.x = TRUE)
 gap_features_1721 <- merge(gap_features_1721, aspect[,c("gap.id","aspect")], by = "gap.id", all.x = TRUE)
 
-saveRDS(gap_features_1721,"processed/sensitivity/gap_features_new_expanding_1721.rds")
+#saveRDS(gap_features_1721,"processed/sensitivity/gap_features_new_expanding_1721.rds")
+saveRDS(gap_features_1721,"processed/sensitivity/version.mmu400/gap_features_new_expanding_1721.rds")
+
+# ----- load gap features for original gaps mmu400 
+# ----- prepare mmu400 gap dfs for analysis
+
+# gaps400_917 <- readRDS("processed/creation/updated/gap_features_new_expanding_917.rds")
+# gaps400_1721 <- readRDS("processed/creation/updated/gap_features_new_expanding_1721.rds")
+
+gaps400_917 <- readRDS("processed/sensitivity/version.mmu400/gap_features_new_expanding_917.rds")
+gaps400_1721 <- readRDS("processed/sensitivity/version.mmu400/gap_features_new_expanding_1721.rds")
+
+# sensitivity.ids <- readRDS("processed/sensitivity/origID_mmu400_sensitivityAoi.rds")
+# 
+# ids17 <- subset(sensitivity.ids, year %in% c("17"))
+# ids21 <- subset(sensitivity.ids, year %in% c("21"))
+# 
+# gaps400_917 <- subset(gaps400_917, gap.id %in% ids17$ids)
+# gaps400_1721 <- subset(gaps400_1721, gap.id %in% ids21$ids)
+
+gaps400_917$year <- as.factor("9-17")
+gaps400_1721$year <- as.factor("17-21")
+
+gap_features921.400 <- rbind(gaps400_917, gaps400_1721)
+gap_features921.400<- subset(gap_features921.400, new.exp %in% c("new", "expanding")) #exclude stable gaps for the analysis
+gap_features921.400 <- gap_features921.400[gap_features921.400$elevation != "1800-2000",]
+
+# delete gaps smaller than 400m2, as they emerged out of the cropping of the reserach area
+
+gap_features921.400 <- gap_features921.400[gap_features921.400$area.ha >= 0.04,] 
+
+gap_features921.400$mmu <- as.factor(400) # indicate mmu gap size
+
+
+# --------------------- prepare mmu100 gap dfs for analysis --------------------
+
+gap_features_917 <- readRDS("processed/sensitivity/gap_features_new_expanding_917.rds")
 gap_features_1721 <- readRDS("processed/sensitivity/gap_features_new_expanding_1721.rds")
-
-
-# analyse new and expanding gaps ----------------------------------------------------------
-
   
 #calculate amount of expansion (check with MA) 2017
 sum(gap_features_917$exp.area.ha)/8 # 9.48  fits values of MA (9.89 ha/yr, as I excluded areas >1800m)
@@ -346,9 +385,16 @@ gap_features921 <- subset(gap_features921, new.exp %in% c("new", "expanding")) #
 gap_features921 <- gap_features921[gap_features921$elevation != "1800-2000",]
 gap_features921 <- gap_features921[!is.na(gap_features921$elevation),] # only optional if there are NAs in the df
 
-
 #----!!! change from 400 to 100 !!!
 gap_features921 <- gap_features921[gap_features921$area.ha >= 0.01,] #delete gaps smaller than 100m2, as they emerged out of the cropping of the reserach area
+
+gap_features921$mmu <- as.factor(100)
+
+
+# ------ merge dfs for sensitivity analysis ----
+
+gap_features921 <- rbind(gap_features921, gap_features921.400)
+gap_features921 <- gap_features921[!is.na(gap_features921$elevation),] # only optional if there are NAs in the df
 
 # ---- relabel Larch-Swiss stone pine and Dwarf mountain pine to one forest type class ---
 
@@ -383,7 +429,7 @@ gap_features921$forest_type <- factor(gap_features921$forest_type,levels=rev(lev
 
 # all
 
-gap.creation <- gap_features921 %>% group_by(new.exp, year) %>%
+gap.creation <- gap_features921 %>% group_by(new.exp, year,mmu) %>%
   summarize(gap.creation.ha = sum(exp.area.ha),
             n.gaps = length(unique(gap.id)),
             ha.per.gap = round(gap.creation.ha / n.gaps, 3)) %>%
@@ -391,7 +437,7 @@ gap.creation <- gap_features921 %>% group_by(new.exp, year) %>%
                        `9-17`=8,
                        `17-21`=4),
          gap.creation.annual = round(gap.creation.ha/time,2)) %>%
-  group_by(new.exp)%>%
+  group_by(new.exp, mmu)%>%
   mutate(avg.gap.creation.annual = round(mean(gap.creation.annual),2),
          sd = sd(gap.creation.annual,2),
         median = round(median(gap.creation.annual),2),
@@ -662,52 +708,66 @@ dev.off()
 
 My_Theme = theme(
   title = element_text(size = 18),
-  axis.title.x = element_text(size = 30),
+  axis.title.x = element_text(size = 26),
   axis.text.x = element_text(size = 24,angle = 45, hjust=1),
   axis.text.y = element_text(size = 24),
-  axis.title.y = element_text(size = 30),
+  axis.title.y = element_text(size = 26),
   legend.key.height = unit(1, 'cm'),
-  legend.title = element_text(size=30),
-  legend.text = element_text(size=30),
-  strip.text.x = element_text(size = 20),
+  legend.title = element_text(size=26),
+  legend.text = element_text(size=26),
+  strip.text.x = element_text(size = 26),
   panel.spacing = unit(2, "lines"),
-  legend.position = c(0.3, 0.8))
+  legend.position = c(0.1, 0.8))
 
 
 
 tiff("new_exp_density_creation.tiff", units="in", width=12, height=8, res=300)
-ggplot(gap_features921, aes(x=exp.area.ha, fill=factor(new.exp))) + geom_density(alpha=.5) +
+ggplot(gap_features921, aes(x=exp.area.ha, fill=factor(mmu))) + geom_density(alpha=.5) +
   # scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x), labels = label_number(accuracy = 0.1))+
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),labels = trans_format("log10", math_format(10^.x)))+
-  guides(fill=guide_legend(title="creation mechanism")) +
+  guides(fill=guide_legend(title="mmu")) +
   theme_classic() +
   My_Theme +  
-  #scale_fill_brewer(palette = "Dark2")+ 
   scale_fill_colorblind()+
-  labs( x="size of gap creation area in log10 [ha]") 
+  labs( x="size of gap creation area in log10 (ha)") +
+  facet_grid(~ new.exp)
 dev.off()
 
 
 
 
-#new vs. expanding
+#new vs. expanding rate
 
+My_Theme = theme(
+  title = element_text(size = 18),
+  axis.title.x = element_text(size = 26),
+  axis.text.x = element_text(size = 24,angle = 45, hjust=1),
+  axis.text.y = element_text(size = 24),
+  axis.title.y = element_text(size = 26),
+  legend.key.height = unit(1, 'cm'),
+  legend.title = element_text(size=26),
+  legend.text = element_text(size=26),
+  strip.text.x = element_text(size = 26),
+  panel.spacing = unit(2, "lines"),
+  legend.position = c(0.8, 0.8))
 
 tiff("area_ new_exp.tiff", units="in", width=12, height=8, res=300)
-ggplot(gap.creation, aes(x=new.exp , y=median.scaled)) + 
-  geom_point(shape = 21, fill = "black",color = "black", size = 10) +
+ggplot(gap.creation, aes(x=new.exp , y=median.scaled, fill= mmu)) + 
+  geom_point(aes(colour=mmu),shape = 21, size = 8, position=position_dodge(width=0.7)) +
+  scale_fill_colorblind()+
+  scale_colour_colorblind()+
   #facet_wrap(~forest_type) +
   theme_minimal()+ coord_flip()  +  My_Theme +
-  labs(x = "gap creation mechanism", y= "annual rate of gap creation [ha/yr/100 ha]")+ 
-  geom_pointrange(aes(ymin=median.scaled-q5_ascaled, ymax=median.scaled+q95_ascaled), linewidth = 2)
+  labs(x = "creation mechanism", y= "annual rate of gap creation ( ha / 100 ha )")+ 
+  geom_pointrange(aes(ymin=median.scaled-q5_ascaled, ymax=median.scaled+q95_ascaled, colour=mmu), linewidth = 2,position=position_dodge(width=0.7))
 dev.off()
 
 
 #boxplot
-ggplot(gap_features921, aes(x=new.exp , y=exp.area.ha)) + 
+ggplot(gap_features921, aes(x=new.exp , y=exp.area.ha, fill=mmu)) + 
   geom_violin()+
   scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x), labels = label_number(accuracy = 0.1))+
   theme_minimal()+ coord_flip()  +  My_Theme +
-  labs(x = "gap creation mechanism", y= "area of annual gap creation [ha/yr/100 ha]") 
+  labs(x = "gap creation mechanism", y= "annual rate of gap creation ( ha / 100 ha )") 
 
 # per environmental feature - not for sensitivity

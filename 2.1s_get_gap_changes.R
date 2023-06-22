@@ -11,7 +11,8 @@ setwd(wd)
 
 # --- load gap layers ----
 
-gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu100.sensitivity.tif")
+#gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu100.sensitivity.tif")
+gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu400.sensitivity.tif")
 gaps2009 <- gap_stack[[1]]
 gaps2017<- gap_stack[[2]]
 gaps2021<- gap_stack[[3]]
@@ -52,6 +53,9 @@ gap_change_917 <- getGapChanges(gaps2009, gaps2017)
 gap_change_1721 <- getGapChanges(gaps2017, gaps2021)
 
 
-terra::writeRaster(gap_change_917, "processed/sensitivity/gap_change_917_cn2cr2_mmu100n8.tif",overwrite=TRUE)
-terra::writeRaster(gap_change_1721, "processed/sensitivity/gap_change_1721_cn2cr2_mmu100n8.tif",overwrite=TRUE)
+# terra::writeRaster(gap_change_917, "processed/sensitivity/gap_change_917_cn2cr2_mmu100n8.tif",overwrite=TRUE)
+# terra::writeRaster(gap_change_1721, "processed/sensitivity/gap_change_1721_cn2cr2_mmu100n8.tif",overwrite=TRUE)
+
+terra::writeRaster(gap_change_917, "processed/sensitivity/version.mmu400/gap_change_917_cn2cr2_mmu400n8.tif",overwrite=TRUE)
+terra::writeRaster(gap_change_1721, "processed/sensitivity/version.mmu400/gap_change_1721_cn2cr2_mmu400n8.tif",overwrite=TRUE)
 

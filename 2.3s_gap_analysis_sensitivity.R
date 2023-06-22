@@ -13,7 +13,8 @@ setwd(wd)
 
 # --- load Gap layers ----
 
-gap_stack <- rast("gaps_sensitivity/gap.stack.mmu100.sensitivity.tif") # layer have been cropped previously to the research area
+#gap_stack <- rast("gaps_sensitivity/gap.stack.mmu100.sensitivity.tif") # layer have been cropped previously to the research area
+gap_stack <- rast("gaps_sensitivity/gap.stack.mmu400.sensitivity.tif") # layer have been cropped previously to the research area
 gaps2009 <- gap_stack[[1]]
 gaps2017<- gap_stack[[2]]
 gaps2021<- gap_stack[[3]]
@@ -153,14 +154,16 @@ return(gap_list)
 }
 
 
-#------- calculate gap stats per forest type
+#------- calculate gap stats 
+
 stats_2009<- Gap_Stats_ftype(gaps2009, foresttype, elevation, aspect, "2009")
 stats_2017 <- Gap_Stats_ftype(gaps2017, foresttype, elevation, aspect, "2017")
 stats_2021 <- Gap_Stats_ftype(gaps2021, foresttype, elevation, aspect, "2021")
 
 stats_all <- rbind(stats_2009, stats_2017, stats_2021)
 
-saveRDS(stats_all, "sensitivity/stats_sensitivity.rds")
+#saveRDS(stats_all, "sensitivity/stats_sensitivity.rds")
+saveRDS(stats_all, "sensitivity/version.mmu400/stats_sensitivity.rds")
 
 
 

@@ -18,7 +18,8 @@ setwd(wd)
 
 # --- load Gap layers ----
 
-gap_stack <- rast("gaps_sensitivity/gap.stack.mmu100.sensitivity.tif") # layer have been cropped previously to the research area
+#gap_stack <- rast("gaps_sensitivity/gap.stack.mmu100.sensitivity.tif") # layer have been cropped previously to the research area
+gap_stack <- rast("gaps_sensitivity/gap.stack.mmu400.sensitivity.tif") # layer have been cropped previously to the research area
 gaps2009 <- gap_stack[[1]]
 gaps2017<- gap_stack[[2]]
 gaps2021<- gap_stack[[3]]
@@ -107,8 +108,11 @@ class_df <- foreach(i = unique(gaps.df$gaps2017), .combine = rbind) %dopar% { #"
 stopCluster(cl)
 class_df <- as.data.frame(class_df)
 
-saveRDS(class_df, "sensitivity/new_exp_gap_class_917_sensitivity.rds")
-class_df<- readRDS("sensitivity/new_exp_gap_class_917_sensitivity.rds")
+# saveRDS(class_df, "sensitivity/new_exp_gap_class_917_sensitivity.rds")
+# class_df<- readRDS("sensitivity/new_exp_gap_class_917_sensitivity.rds")
+
+saveRDS(class_df, "sensitivity/version.mmu400/new_exp_gap_class_917_sensitivity.rds")
+class_df<- readRDS("sensitivity/version.mmu400/new_exp_gap_class_917_sensitivity.rds")
 
 class_df_917 <- class_df
 names(class_df) <- c("gap_id", "class") #rename columns
@@ -132,7 +136,8 @@ rclamat3 <- cbind(ID_vector_stablegap, ID_vector_replace_stable)
 rclmat <- rbind(rclmat1, rclamat2, rclamat3)
 
 gaps2017_class<- classify(gaps2017, rclmat, include.lowest=TRUE)
-writeRaster(gaps2017_class, "sensitivity/gaps2017_new_extended_stable_sensitivity.tif")
+#writeRaster(gaps2017_class, "sensitivity/gaps2017_new_extended_stable_sensitivity.tif")
+writeRaster(gaps2017_class, "sensitivity/version.mmu400/gaps2017_new_extended_stable_sensitivity.tif")
 
 
 # 2017-2021 ---------------------------------------------------------------------
@@ -157,8 +162,11 @@ class_df <- foreach(i = unique(gaps.df$gaps2021), .combine = rbind) %dopar% { #"
 stopCluster(cl)
 class_df <- as.data.frame(class_df)
 
-saveRDS(class_df, "sensitivity/new_exp_gap_class_1721_sensitivity.rds")
-class_df <- readRDS( "sensitivity/new_exp_gap_class_1721_sensitivity.rds")
+# saveRDS(class_df, "sensitivity/new_exp_gap_class_1721_sensitivity.rds")
+# class_df <- readRDS( "sensitivity/new_exp_gap_class_1721_sensitivity.rds")
+
+saveRDS(class_df, "sensitivity/version.mmu400/new_exp_gap_class_1721_sensitivity.rds")
+class_df <- readRDS( "sensitivity/version.mmu400/new_exp_gap_class_1721_sensitivity.rds")
 
 class_df_1721 <- class_df
 names(class_df) <- c("gap_id", "class") #rename columns
@@ -182,7 +190,7 @@ rclamat3 <- cbind(ID_vector_stablegap, ID_vector_replace_stable)
 rclmat <- rbind(rclmat1, rclamat2, rclamat3)
 
 gaps2021_class<- classify(gaps2021, rclmat, include.lowest=TRUE)
-writeRaster(gaps2021_class, "sensitivity/gaps2021_new_extended_stable_sensitivity.tif")
-
+#writeRaster(gaps2021_class, "sensitivity/gaps2021_new_extended_stable_sensitivity.tif")
+writeRaster(gaps2021_class, "sensitivity/version.mmu400/gaps2021_new_extended_stable_sensitivity.tif")
 
 

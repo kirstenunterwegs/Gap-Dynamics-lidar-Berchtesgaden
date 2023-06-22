@@ -15,7 +15,8 @@ setwd(wd)
 
 #--- load layers ---
 
-gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu100.sensitivity.tif")
+#gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu100.sensitivity.tif")
+gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu400.sensitivity.tif")
 gaps2009 <- gap_stack[[1]]
 gaps2017<- gap_stack[[2]]
 gaps2021<- gap_stack[[3]]
@@ -41,14 +42,17 @@ gap_change_class <- function(gap_layer1, gap_layer2){
 exp_clo_917 <- gap_change_class(gaps2009, gaps2017)
 exp_clo_1721 <- gap_change_class(gaps2017, gaps2021)
 
-terra::writeRaster(exp_clo_917, "processed/sensitivity/exp_clo_917_cn2cr2_mmu100n8_filtered.tif")
-terra::writeRaster(exp_clo_1721, "processed/sensitivity/exp_clo_1721_cn2cr2_mmu100n8_filtered.tif")
+# terra::writeRaster(exp_clo_917, "processed/sensitivity/exp_clo_917_cn2cr2_mmu100n8_filtered.tif")
+# terra::writeRaster(exp_clo_1721, "processed/sensitivity/exp_clo_1721_cn2cr2_mmu100n8_filtered.tif")
+
+terra::writeRaster(exp_clo_917, "processed/sensitivity/version.mmu400/exp_clo_917_cn2cr2_mmu400n8_filtered.tif")
+terra::writeRaster(exp_clo_1721, "processed/sensitivity/version.mmu400/exp_clo_1721_cn2cr2_mmu400n8_filtered.tif")
 
 
 # --- extract vegeation growth in gap closure areas per time step ---
 
-exp_clo_917 <- rast("processed/sensitivity/exp_clo_917_cn2cr2_mmu100n8_filtered.tif")
-exp_clo_1721 <- rast("processed/sensitivity/exp_clo_1721_cn2cr2_mmu100n8_filtered.tif")
+#exp_clo_917 <- rast("processed/sensitivity/exp_clo_917_cn2cr2_mmu100n8_filtered.tif")
+#exp_clo_1721 <- rast("processed/sensitivity/exp_clo_1721_cn2cr2_mmu100n8_filtered.tif")
 
 chm9 <- rast("F:/Projects/CanopyDynamicsBDG/data/CHM_data/chm9_artifacts_masked.tif")
 chm17 <- rast("F:/Projects/CanopyDynamicsBDG/data/CHM_data/chm17_artifacts_masked.tif")
@@ -73,6 +77,8 @@ clo_growth_917 <-mask(diff917, clo_917)
 diff1721 <- crop(diff1721, clo_1721)
 clo_growth_1721 <-mask(diff1721, clo_1721) 
 
-writeRaster(clo_growth_917 , "processed/sensitivity/closure_area_growth_917.tif")
-writeRaster(clo_growth_1721 , "processed/sensitivity/closure_area_growth_1721.tif")
+# writeRaster(clo_growth_917 , "processed/sensitivity/closure_area_growth_917.tif")
+# writeRaster(clo_growth_1721 , "processed/sensitivity/closure_area_growth_1721.tif")
 
+writeRaster(clo_growth_917 , "processed/sensitivity/version.mmu400/closure_area_growth_917.tif")
+writeRaster(clo_growth_1721 , "processed/sensitivity/version.mmu400/closure_area_growth_1721.tif")

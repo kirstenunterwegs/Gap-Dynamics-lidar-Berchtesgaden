@@ -6,17 +6,8 @@ library(dplyr)
 library(tidyr)
 library(terra)
 library(ggplot2)
-# library(lattice)
-# library(latticeExtra)
-# library(rasterVis)
 library(RColorBrewer)
-
-# library(sp)
-#library(lidR)
-# library(ggExtra)
-#library(sf)
-# library(ForestTools)
-# library(ForestGapR)
+library(stringr)  
 
 
 wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
@@ -24,7 +15,8 @@ setwd(wd)
 
 # --- load Gap layers ----
 
-gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu100.sensitivity.tif") # layer have been cropped previously to the research area
+#gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu100.sensitivity.tif") # layer have been cropped previously to the research area
+gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu400.sensitivity.tif") # layer have been cropped previously to the research area
 gaps2009<- gap_stack[[1]]
 gaps2017<- gap_stack[[2]]
 
@@ -34,20 +26,28 @@ gaps2017<- gap_stack[[2]]
 
 
 boundaries9 <- boundaries(gaps2009, directions=8, inner=TRUE)
-writeRaster(boundaries9, "processed/sensitivity/gap_boundaries9.tif")
+#writeRaster(boundaries9, "processed/sensitivity/gap_boundaries9.tif")
+writeRaster(boundaries9, "processed/sensitivity/version.mmu400/gap_boundaries9.tif")
 
 boundaries17 <- boundaries(gaps2017, directions=8, inner=TRUE)
-writeRaster(boundaries17, "processed/sensitivity/gap_boundaries17.tif")
+#writeRaster(boundaries17, "processed/sensitivity/gap_boundaries17.tif")
+writeRaster(boundaries9, "processed/sensitivity/version.mmu400/gap_boundaries17.tif")
 
 ####################################################### classify vertical and horizontal closure ##################################
 
 #load closure areas with growth information
-clo_growth_917 <- rast("processed/sensitivity/closure_area_growth_917.tif")
-clo_growth_1721 <- rast("processed/sensitivity/closure_area_growth_1721.tif")
+# clo_growth_917 <- rast("processed/sensitivity/closure_area_growth_917.tif")   # mmu100
+# clo_growth_1721 <- rast("processed/sensitivity/closure_area_growth_1721.tif")
+
+clo_growth_917 <- rast("processed/sensitivity/version.mmu400/closure_area_growth_917.tif") # mmu400
+clo_growth_1721 <- rast("processed/sensitivity/version.mmu400/closure_area_growth_1721.tif")
 
 #load gap boundaries
-boundaries.2009 <- rast("processed/sensitivity/gap_boundaries9.tif")
-boundaries.2017 <- rast("processed/sensitivity/gap_boundaries17.tif")
+# boundaries.2009 <- rast("processed/sensitivity/gap_boundaries9.tif")  # mmu100
+# boundaries.2017 <- rast("processed/sensitivity/gap_boundaries17.tif")
+
+boundaries.2009 <- rast("processed/sensitivity/version.mmu400/gap_boundaries9.tif") # mmu400
+boundaries.2017 <- rast("processed/sensitivity/version.mmu400/gap_boundaries17.tif")
 
 #adjust extents
 clo_growth_917 <- crop(clo_growth_917, boundaries.2009)
@@ -88,9 +88,11 @@ gap_closure_mechanism917 <- gap_closure_mechanism917(clo_growth_917, boundaries.
 gap_closure_mechanism1721 <- gap_closure_mechanism1721(clo_growth_1721, boundaries.2017)
 
 
-terra::writeRaster(gap_closure_mechanism917, "processed/sensitivity/gap_closure_mechanism917.tif", overwrite=TRUE) 
-terra::writeRaster(gap_closure_mechanism1721, "processed/sensitivity/gap_closure_mechanism1721.tif", overwrite=TRUE)
+# terra::writeRaster(gap_closure_mechanism917, "processed/sensitivity/gap_closure_mechanism917.tif", overwrite=TRUE) # mmu100
+# terra::writeRaster(gap_closure_mechanism1721, "processed/sensitivity/gap_closure_mechanism1721.tif", overwrite=TRUE)
 
+terra::writeRaster(gap_closure_mechanism917, "processed/sensitivity/version.mmu400/gap_closure_mechanism917.tif", overwrite=TRUE) # mmu400
+terra::writeRaster(gap_closure_mechanism1721, "processed/sensitivity/version.mmu400/gap_closure_mechanism1721.tif", overwrite=TRUE)
 
 ###----------- analyze closure per gap (size), elevation, aspect, management and forest type ----------- ###
 
@@ -146,8 +148,10 @@ gap_clo_per_id <-  gap_closure_mechanism_stack.df %>% group_by(gap_id) %>%
   count(closure_mechanism) %>% 
   mutate(gap_area = sum(n))
 
-#drop gaps < 400 m2 (emerge through masking of research area, as large gaps transcending management area or elevation lines get cut) #change to 100 for sensitivity!
-gap_clo_per_id <- gap_clo_per_id[gap_clo_per_id$gap_area >= 100,]
+#drop gaps < 100 m2 / 400 m2 (emerge through masking of research area, as large gaps transcending management area or elevation lines get cut) #change to 100 for sensitivity!
+
+#gap_clo_per_id <- gap_clo_per_id[gap_clo_per_id$gap_area >= 100,]
+gap_clo_per_id <- gap_clo_per_id[gap_clo_per_id$gap_area >= 400,]
 
 #calculate share of closure mechanism on whole gap area
 gap_clo_per_id$closure_share = round(gap_clo_per_id$n/gap_clo_per_id$gap_area,2) 
@@ -156,7 +160,9 @@ gap_clo_per_id$closure_share = round(gap_clo_per_id$n/gap_clo_per_id$gap_area,2)
 gap_clo_per_id$contraction <- ifelse(is.na(gap_clo_per_id$closure_mechanism) & gap_clo_per_id$closure_share >= 0.99, 1,0 )
 sum(gap_clo_per_id$contraction) # 2 gaps do not experience any closure from 2009-2017 (previously 7, maybe the masking cut off some gap areas)
 
+
 gap_clo_per_id_nona <- gap_clo_per_id %>% drop_na(closure_mechanism) #drop pixels not closing
+
 gap_clo_per_id_nona$closure_mechanism <- as.factor(gap_clo_per_id_nona$closure_mechanism) #make closure mechanism as factor
 
 #recode closure mechanism
@@ -231,7 +237,9 @@ gap_clo_per_id <-  gap_closure_mechanism_stack.df_1721 %>% group_by(gap_id) %>%
   mutate(gap_area = sum(n))
 
 #drop gaps < 400 m2 (emerge through masking of research area, as large gaps transcending management area or elevation lines get cut)
-gap_clo_per_id <- gap_clo_per_id[gap_clo_per_id$gap_area >= 100,]
+
+#gap_clo_per_id <- gap_clo_per_id[gap_clo_per_id$gap_area >= 100,]
+gap_clo_per_id <- gap_clo_per_id[gap_clo_per_id$gap_area >= 400,]
 
 #calculate share of closure mechanism on whole gap area
 gap_clo_per_id$closure_share = round(gap_clo_per_id$n/gap_clo_per_id$gap_area,2) 
@@ -281,13 +289,6 @@ gap_clo_per_id_nona_1721<-gap_clo_per_id_nona %>%
                                      `(0.9,1]`="0.9-1",
                                      `(1,45]`=">1")))
 
-# mutate(gap.size = as.factor(recode(gap_area_bins,
-#                                    `(399,500]`="400-500",
-#                                    `(500,1e+03]`="500-1000",
-#                                    `(1e+03,5e+03]`="1000-5000",
-#                                    `(5e+03,1e+04]`="5000-10,000",
-#                                    `(1e+04,5e+04]`="10,000-50,000",
-#                                    `(5e+04,4.5e+05]`="50,000-450,000")))
 
 
 ### -------------------------------merge 9-17 and 17-21 dfs for comparison ----------------------- ###
@@ -302,8 +303,10 @@ gap_clo_NP_91721$timestep <- factor(gap_clo_NP_91721$timestep , levels=c("9-17",
 
 # ---add environmental feature information
 
-#join with management information
-stats <- readRDS("processed/sensitivity/stats_sensitivity.rds")
+#join with environmental information
+#stats <- readRDS("processed/sensitivity/stats_sensitivity.rds") # mmu100
+stats <- readRDS("processed/sensitivity/version.mmu400/stats_sensitivity.rds") # mmu400
+
 # recode years to timesteps for merges
 stats <- stats %>% mutate( timestep = as.factor(recode(year,
                                                           `2009`="9-17", 
@@ -379,8 +382,48 @@ gap_clo$forest_type <- factor(gap_clo$forest_type,levels=rev(levels(gap_clo$fore
 
 gap_clo$gap.size <- ordered(gap_clo$gap.size, levels = c("0.01-0.04","0.04-0.1", "0.1-0.2",  "0.2-0.3",  "0.3-0.4",  "0.4-0.5",  "0.5-0.6",  "0.6-0.7",  "0.7-0.8",  "0.8-0.9",  "0.9-1", ">1" ))
 
-saveRDS(gap_clo, "processed/sensitivity/clo_analysis_ready.rds")
+# saveRDS(gap_clo, "processed/sensitivity/clo_analysis_ready.rds") # mmu100
 gap_clo <- readRDS("processed/sensitivity/clo_analysis_ready.rds")
+
+# saveRDS(gap_clo, "processed/sensitivity/version.mmu400/clo_analysis_ready.rds") # mmu400
+# gap_clo <- readRDS("processed/sensitivity/version.mmu400/clo_analysis_ready.rds")
+
+#-------
+# reverse gap_id and year/time pasting (to append lateral + vertical closure)
+
+# gap_clo$year <-  as.numeric(str_sub(gap_clo$id, - 1))  
+# gap_clo$id <- as.numeric(substring(gap_clo$id, 1, nchar(gap_clo$id) - 1))
+# 
+# gap_clo <-  select(gap_clo,  -"year")
+
+
+# ---- load gap closure information of original mmu400 gap layer and merge
+
+gap_clo400 <-  readRDS("processed/sensitivity/version.mmu400/clo_analysis_ready.rds")
+
+# sensitivity.ids <- readRDS("processed/sensitivity/origID_mmu400_sensitivityAoi.rds")
+# 
+# ids <- subset(sensitivity.ids, year %in% c("9", "17"))
+# ids <- ids %>% mutate(year = (recode(year,  # from 2009-2017 = 8 years, from 2017-2021 = 4 years
+#                                  `9`= 8, 
+#                                  `17`=4)))
+# 
+# # reverse gap_id and year/time pasting (to append lateral + vertical closure)
+# 
+# gap_clo400$year <-  as.numeric(str_sub(gap_clo400$id, - 1))  
+# gap_clo400$id <- as.numeric(substring(gap_clo400$id, 1, nchar(gap_clo400$id) - 1))
+# 
+# gap_clo400 <- subset(gap_clo400, id %in% ids$ids & year %in% ids$year)
+# 
+# gap_clo400 <-  select(gap_clo400,  -"year")
+
+
+# --- assign mmus and prepare for plotting 
+
+gap_clo400$mmu <- as.factor(400) # indicate mmu gap size
+gap_clo$mmu <- as.factor(100)
+
+gap_clo<- rbind(gap_clo, gap_clo400)
 
 # -----
 
@@ -432,7 +475,7 @@ clo_NP <- gap_clo_NP_91721 %>% group_by(closure_mechanism) %>%
 #   clo_NP.agg$closure_mechanism <- as.factor(clo_NP.agg$closure_mechanism)
 
 
-clo_NP.sizebins <- gap_clo_NP_91721 %>% group_by(closure_mechanism, gap.size) %>%
+clo_NP.sizebins <- gap_clo_NP_91721 %>% group_by(closure_mechanism, gap.size, mmu) %>%
   summarise(avg_clo_share_annual = round(mean(clo_share_sum_annual),4),
             avg_share_mechanism_annual = round(mean(clo_share_annual),4),
             percent_share_mechanism = avg_share_mechanism_annual/ avg_clo_share_annual,
@@ -462,20 +505,12 @@ clo.size$closure_mechanism <- as.factor(clo.size$closure_mechanism)
 clo.size$closure_mechanism <-  ordered(clo.size$closure_mechanism, levels = c("lateral closure" , "vertical closure", "lateral + vertical"))  
 
 
-#plot closure according to gap size bins
-# tiff("gap_closure_NP_box_violin.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721, aes(x=gap.size , y=clo_share_sum_annual)) + geom_violin() + 
-#   geom_boxplot(width=0.1) +
-#   theme_minimal()+ coord_flip() +
-#   theme(legend.position="bottom") +My_Theme  +    scale_fill_viridis(discrete = TRUE) +
-#   labs( x = "gap size [ha]", y= "% of gap area closing annually")
-# dev.off()
+# --- closure rates as boxplots
 
 give.n <- function(x){
   return(c(y = median(x)*1.05, label = length(x))) 
   # experiment with the multiplier to find the perfect position
 }
-
 
 tiff("gap_closure_mechanism_gap.size_box.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap_clo, aes(x=gap.size , y=clo_share_annual, fill=closure_mechanism)) +
@@ -485,743 +520,32 @@ ggplot(gap_clo, aes(x=gap.size , y=clo_share_annual, fill=closure_mechanism)) +
   stat_summary(fun.data = give.n, geom = "text", fun.y = median)
 dev.off()
 
-# Create a separate dataframe with count of observations for each gap.size
-count_df <- gap_clo %>%
-  group_by(gap.size) %>%
-  summarise(n = n())
 
-# Join the count_df with gap_clo dataframe based on gap.size
-gap_clo_with_count <- gap_clo %>%
-  left_join(count_df, by = "gap.size")
-
-
-ggplot(gap_clo, aes(x=gap.size , y=clo_share_annual, fill=closure_mechanism)) +
-  geom_boxplot(position=position_dodge(width=0.9)) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "gap size [ha]", y= "% of gap area closing annually", colour= "closure mechanism")+
-  geom_text(data = count_df, aes(label = paste0("n = ", n)), vjust = -1, show.legend = FALSE)
 
 
 My_Theme = theme(
   title = element_text(size = 18),
-  axis.title.x = element_text(size = 35),
-  axis.text.x = element_text(size = 28),
-  axis.text.y = element_text(size = 28),
-  axis.title.y = element_text(size = 35),
+  axis.title.x = element_text(size = 26),
+  axis.text.x = element_text(size = 24),
+  axis.text.y = element_text(size = 24),
+  axis.title.y = element_text(size = 26),
   legend.key.height = unit(1, 'cm'),
-  legend.title = element_text(size=18),
-  legend.text = element_text(size=18),
+  legend.title = element_text(size=26),
+  legend.text = element_text(size=26),
   strip.text.x = element_text(size = 16),
   strip.text.y = element_text(size = 16),
   legend.position="top") #bottom
 
+
+
 tiff("gap_closure_gap.size_box.tiff", units="in", width=12, height=8, res=300)
-ggplot(subset(gap_clo, closure_mechanism %in% "lateral + vertical"), aes(x=gap.size , y=clo_share_annual, fill="green")) +
+ggplot(subset(gap_clo, closure_mechanism %in% "lateral + vertical"), aes(x=gap.size , y=clo_share_annual, fill=mmu)) +
   geom_boxplot(position=position_dodge(width=0.9)) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "gap size [ha]", y= "% of gap area closing annually", colour= "closure mechanism")+ guides(fill = FALSE)  
-dev.off()
-
-# plot gap size vs. closure share per mechanism
-# 
-# pm <- ggplot(gap_clo_NP_91721, aes(x=gap_area, y=clo_share_annual, col=closure_mechanism)) + geom_point()+
-#   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
-#                 labels = trans_format("log10", math_format(10^.x))) +
-#   theme_classic()+  scale_color_brewer(palette="Dark2") + My_Theme +
-#   labs(x = "gap size [m2]", y= "% of gap area closing annually", colour= "closure mechanism")
-# tiff("gap_closure-no_clo_mechanism.tiff", units="in", width=12, height=8, res=300)
-# ggMarginal(pm, type="boxplot", groupColour = TRUE, groupFill = TRUE)
-# dev.off()
-# 
-# 
-# # complete closure share vs. gap size
-# 
-# p<- ggplot(gap_clo_NP_91721, aes(x=gap_area, y=clo_share_sum_annual)) + geom_point() +
-#                 theme_classic() +
-#   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
-#                 labels = trans_format("log10", math_format(10^.x))) + My_Theme+
-#   labs(x = "gap size [ha]", y= "% of gap area closing annually")
-# 
-# 
-# tiff("gap_closure-no_clo_all_917.tiff", units="in", width=12, height=8, res=300)
-# ggMarginal(p, type="histogram")
-# #ggMarginal(p, type="boxplot")
-# dev.off()
-# 
-# # complete closure share vs. timestep
-# 
-# p<- ggplot(gap_clo_NP_91721, aes(x=gap_area, y=clo_share_sum_annual, col=timestep)) + geom_point() +
-#   theme_classic() +
-#   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
-#                 labels = trans_format("log10", math_format(10^.x))) + My_Theme+
-#   labs(x = "gap size [ha]", y= "% of gap area closing annually")
-# 
-# 
-# tiff("gap_closure-timestep.tiff", units="in", width=12, height=8, res=300)
-# ggMarginal(p,type="boxplot", groupColour = TRUE, groupFill = TRUE)
-# #ggMarginal(p, type="boxplot")
-# dev.off()
-
-#----- full plots closure vs. area scatter
-# 
-# tiff("gap_closure-abs_area_scatter_below1.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721  %>% filter(gap_area.ha <1) 
-#        , aes(x=gap_area.ha, y=clo_area_sum_annual)) + geom_point()+
-#   geom_smooth(colour="blue") +
-# geom_smooth(colour="red", method = "lm") + My_Theme
-# dev.off()
-# 
-# tiff("gap_closure-abs_area_scatter.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721 # %>% filter(gap_area.ha <1) 
-#        , aes(x=gap_area.ha, y=clo_area_sum_annual)) + geom_point()+
-#   geom_smooth(colour="blue") +
-#   geom_smooth(colour="red", method = "lm") + My_Theme
-# dev.off()
-# 
-# tiff("gap_closure-share_area_scatter_below1_time.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721  %>% filter(gap_area.ha <1) 
-#        , aes(x=gap_area.ha, y=clo_share_sum_annual)) + geom_point()+
-#   geom_smooth(colour="blue") +
-#   geom_smooth(colour="red", method = "lm") +
-#   facet_wrap(~timestep) + My_Theme
-# dev.off()
-# 
-# tiff("gap_closure-abs_share_scatter.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721  #%>% filter(gap_area.ha <1) 
-#        , aes(x=gap_area.ha, y=clo_share_sum_annual)) + geom_point()+
-#   geom_smooth(colour="blue") +
-#   geom_smooth(colour="red", method = "lm") + My_Theme #+
-#   facet_wrap(~timestep) 
-# dev.off()
-# 
-# 
-# tiff("gap_closure-abs_share_scatter_timestep.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721  #%>% filter(gap_area.ha <1) 
-#        , aes(x=gap_area.ha, y=clo_share_sum_annual)) + geom_point()+
-#   geom_smooth(colour="blue") +
-#   geom_smooth(colour="red", method = "lm") + My_Theme +
-# facet_wrap(~timestep) 
-# dev.off()
-
-
-# average closure area annual
-tiff("gap_closure_mean_are.tiff", units="in", width=12, height=8, res=300)
-ggplot(clo_NP.sizebins, aes(x=gap.size , y=avg_clo_area_annual)) + #avg_clo_area_annual
- # geom_bar(stat = "identity", color="black", position=position_dodge()) + 
-  geom_point(shape = 21, fill = "black",color = "black", size = 7) +
-  #facet_wrap(~forest_type) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "gap size [ha]", y= "gap area [m2] closing annually", colour= "forest type")+ 
-  geom_pointrange(aes(ymin=avg_clo_area_annual-sd_all.a, ymax=avg_clo_area_annual+sd_all.a))
-dev.off()
-
-# mean closure shares
-
-
-# tiff("gap_closure_mean.tiff", units="in", width=12, height=8, res=300)
-# ggplot(clo_NP.sizebins, aes(x=gap.size , y=avg_clo_share_annual)) + #avg_clo_area_annual
-#   geom_bar(stat = "identity", color="black", position=position_dodge()) +
-#   #facet_wrap(~forest_type) +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x = "gap size [ha]", y= "average % of gap area closing annually", colour= "forest type")
-# dev.off()
-
-
-# point with error bar
-
-tiff("gap_closure_mean.tiff", units="in", width=12, height=8, res=300)
-ggplot(clo_NP.sizebins, aes(x=gap.size , y=avg_clo_share_annual)) + 
-  geom_point(shape = 21, fill = "black",color = "black", size = 7) +
-  #facet_wrap(~forest_type) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "gap size [ha]", y= "average % of gap area closing annually", colour= "forest type")+ 
-  geom_pointrange(aes(ymin=avg_clo_share_annual-sd_all, ymax=avg_clo_share_annual+sd_all))
-dev.off()
-# --- mechanism ---
-
-
-# tiff("gap_closure-mechanism_mean.tiff", units="in", width=12, height=8, res=300)
-# ggplot(clo_NP.sizebins, aes(x=gap.size , y=avg_share_mechanism_annual, fill=closure_mechanism)) + 
-#   geom_bar(stat = "identity", color="black", position=position_dodge()) +
-#  # facet_wrap(~forest_type) +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x = "gap size [ha]", y= "average % of gap area closing annually", colour= "closure mechanism")
-# dev.off()
-
-# point with error bar
-tiff("gap_closure-mechanism_mean.tiff", units="in", width=12, height=8, res=300)
-ggplot(clo_NP.sizebins, aes(x=gap.size , y=avg_share_mechanism_annual, colour= closure_mechanism, group= closure_mechanism, fill=closure_mechanism)) + 
-  geom_point(shape = 21, size = 7, position=position_dodge(width=1)) +
-  #facet_wrap(~forest_type) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + 
-  scale_colour_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "gap size [ha]", y= "average % of gap area closing annually", colour= "forest type")+ 
-  geom_pointrange(aes(ymin=avg_share_mechanism_annual-sd_mechanism, ymax=avg_share_mechanism_annual+sd_mechanism), position = position_dodge(width=1))
-dev.off()
-
-tiff("gap_closure-mechanism.tiff", units="in", width=12, height=8, res=300)
-ggplot(clo.size, aes(x=gap.size , y=avg_share_mechanism_annual, colour= closure_mechanism, group= closure_mechanism, fill=closure_mechanism)) + 
-  geom_point(shape = 21, size = 7, position=position_dodge(width=1)) +
-  #facet_wrap(~forest_type) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + 
-  scale_colour_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "gap size [ha]", y= "average % of gap area closing annually", colour= "forest type")+ 
-  geom_pointrange(aes(ymin=avg_share_mechanism_annual-sd_mechanism, ymax=avg_share_mechanism_annual+sd_mechanism), position = position_dodge(width=1))
-dev.off()
-
-# --- closure by aspect---
-
-#calculate average closure share per aspect
-clo_per_aspect <- gap_clo_NP_91721%>% group_by(aspect, closure_mechanism) %>%
-  summarise(avg_clo_share_annual = round(mean(clo_share_sum_annual),2),
-            avg_share_mechanism_annual = round(mean(clo_share_annual),2),
-            percent_share_mechanism = avg_share_mechanism_annual/ avg_clo_share_annual,
-            sd_all = sd(clo_share_sum_annual),
-            sd_mechanism= sd(clo_share_annual),
-            n.obs = n())
-
-# aggregate closure mechanism information for plotting
-clo.aspect <- as.data.frame(clo_per_aspect)
-clo.aspect <- clo.aspect[,c("closure_mechanism", "aspect",  "avg_share_mechanism_annual","sd_mechanism") ]
-
-aspct <- as.character(unique(clo.aspect$aspect))
-clo.aspect$closure_mechanism <- as.character(clo.aspect$closure_mechanism)
-
-for(i in aspct) {
-  sub <- subset(clo.aspect, aspect %in% i)
-  k <- c("lateral + vertical",i, sum(sub$avg_share_mechanism_annual), sum(sub$sd_mechanism))
-  clo.aspect <- rbind(clo.aspect, k)
-  clo.aspect$avg_share_mechanism_annual <- as.numeric(clo.aspect$avg_share_mechanism_annual)
-  clo.aspect$sd_mechanism <- as.numeric(clo.aspect$sd_mechanism)
-}
-
-clo.aspect$closure_mechanism <- as.factor(clo.aspect$closure_mechanism)
-clo.aspect$closure_mechanism <-  ordered(clo.aspect$closure_mechanism, levels = c("lateral closure" , "vertical closure", "lateral + vertical"))  
-
-
-# clo_per_aspect.sizebins <- gap_clo_NP_91721%>% group_by(aspect, closure_mechanism, gap.size) %>%
-#   summarise(avg_clo_share_annual = round(mean(clo_share_sum_annual),2),
-#             avg_share_mechanism_annual = round(mean(clo_share_annual),2),
-#             percent_share_mechanism = avg_share_mechanism_annual/ avg_clo_share_annual,
-#             sd_all = sd(clo_share_sum_annual),
-#             sd_mechanism= sd(clo_share_annual),
-#             n.obs = n())
-
-
-# # closure share per aspect  - boxplot
-# tiff("gap_closure_aspect.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721, aes(x=gap.size , y=clo_share_sum_annual)) + geom_boxplot() + 
-#    facet_wrap(~aspect) +
-#   theme_minimal()+ coord_flip()  + My_Theme +
-#   labs(x = "gap size [ha]", y= "% of gap area closing annually") +    scale_fill_viridis(discrete = TRUE) 
-# dev.off()
-# 
-# # closure mechanism according to aspect - boxplot
-# tiff("gap_closure_mechanism_aspect.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721, aes(x=gap.size , y=clo_share_annual, fill=closure_mechanism)) + geom_boxplot() + facet_wrap(~aspect) +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x = "gap size [ha]", y= "% of gap area closing annually", colour= "closure mechanism")
-# dev.off()
-
-
-#-- mean -bar
-
-# tiff("gap_closure_aspect_mean.tiff", units="in", width=12, height=8, res=300)
-# ggplot(clo_per_aspect, aes(x=aspect , y=avg_clo_share_annual )) + geom_bar(stat = "identity") + 
-#   # facet_wrap(~aspect) +
-#  # facet_grid(aspect~.) +
-#   theme_minimal()  + My_Theme + coord_flip() +
-#   labs(x = "aspect", y= "% of gap area closing annually") +    scale_fill_viridis(discrete = TRUE) 
-# dev.off()
-# 
-# tiff("gap_closure_mechanism_aspect_mean.tiff", units="in", width=12, height=8, res=300)
-# ggplot(clo_per_aspect, aes(x=aspect , y=share_mechanism_annual , fill=closure_mechanism )) + geom_bar(stat = "identity", position="dodge") + 
-#   # facet_wrap(~aspect) +
-#   # facet_grid(aspect~.) +
-#   theme_minimal()+ coord_flip()  + My_Theme +
-#   labs(x = "aspect", y= "% of gap area closing annually") +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") 
-# dev.off()
-
-# --mean point - poinrange
-
-tiff("gap_closure_aspect_mean.tiff", units="in", width=12, height=8, res=300)
-ggplot(clo_per_aspect, aes(x=aspect , y=avg_clo_share_annual)) + 
-  geom_point(shape = 21, fill = "black",color = "black", size = 7) +
-  #facet_wrap(~forest_type) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "aspect", y= "average % of gap area closing annually")+ 
-  geom_pointrange(aes(ymin=avg_clo_share_annual-sd_all, ymax=avg_clo_share_annual+sd_all))
-dev.off()
-
-tiff("gap_closure_mechanism_aspect_mean.tiff", units="in", width=12, height=8, res=300)
-ggplot(clo_per_aspect, aes(x=aspect , y=avg_share_mechanism_annual, colour= closure_mechanism, group= closure_mechanism, fill=closure_mechanism)) + 
-  geom_point(shape = 21, size = 7, position=position_dodge(width=0.3)) +
-  #facet_wrap(~forest_type) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + 
-  scale_colour_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "aspect", y= "average % of gap area closing annually")+ 
-  geom_pointrange(aes(ymin=avg_share_mechanism_annual-sd_mechanism, ymax=avg_share_mechanism_annual+sd_mechanism), position = position_dodge(width=0.3))
-dev.off()
-
-tiff("gap_closure_aspect.tiff", units="in", width=12, height=8, res=300)
-ggplot(clo.aspect, aes(x=aspect , y=avg_share_mechanism_annual, colour= closure_mechanism, group= closure_mechanism, fill=closure_mechanism)) + 
-  geom_point(shape = 21, size = 7, position=position_dodge(width=0.3)) +
-  #facet_wrap(~forest_type) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + 
-  scale_colour_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "aspect", y= "average % of gap area closing annually")+ 
-  geom_pointrange(aes(ymin=avg_share_mechanism_annual-sd_mechanism, ymax=avg_share_mechanism_annual+sd_mechanism), position = position_dodge(width=0.3))
+  theme_minimal()+ coord_flip()  +  
+  scale_fill_brewer(palette="Dark2", name = "mmu") + My_Theme +
+  labs(x = "gap size ( ha )", y= "% of gap area closing annually", colour= "mmu")# +
+  geom_label(data = subset(gap_clo, closure_mechanism %in% "lateral + vertical") %>% dplyr::group_by(gap.size, mmu) %>% dplyr::summarise(N = n(), clo_share_annual = 22),
+             aes(label=paste("n = ", N), fill=mmu), position=position_dodge(width = 0.7))
 dev.off()
 
 
-# --- closure by elevation ---
-
-
-#calculate average closure share per elevation
-clo_per_elevation<- gap_clo_NP_91721 %>% group_by(elevation) %>%
-  summarise(avg_clo_share_annual = round(mean(clo_share_sum_annual),4),
-            avg_share_mechanism_annual = round(mean(clo_share_annual),4),
-            percent_share_mechanism = avg_share_mechanism_annual/ avg_clo_share_annual,
-            sd_all = sd(clo_share_sum_annual),
-            sd_mechanism= sd(clo_share_annual),
-            n.obs = n())
-
-clo_per_elevation.mechanism <- gap_clo_NP_91721 %>% group_by(elevation, closure_mechanism) %>%
-  summarise(avg_clo_share_annual = round(mean(clo_share_sum_annual),4),
-            avg_share_mechanism_annual = round(mean(clo_share_annual),4),
-            percent_share_mechanism = avg_share_mechanism_annual/ avg_clo_share_annual,
-            sd_all = sd(clo_share_sum_annual),
-            sd_mechanism= sd(clo_share_annual),
-            n.obs = n())
-
-# aggregate closure mechanism information for plotting
-clo.elevation <- as.data.frame(clo_per_elevation.mechanism)
-clo.elevation <- clo.elevation[,c("closure_mechanism", "elevation",  "avg_share_mechanism_annual","sd_mechanism") ]
-
-elev <- as.character(unique(clo.elevation$elevation))
-clo.elevation$closure_mechanism <- as.character(clo.elevation$closure_mechanism)
-
-for(i in elev) {
-  sub <- subset(clo.elevation, elevation %in% i)
-  k <- c("lateral + vertical",i, sum(sub$avg_share_mechanism_annual), sum(sub$sd_mechanism))
-  clo.elevation <- rbind(clo.elevation, k)
-  clo.elevation$avg_share_mechanism_annual <- as.numeric(clo.elevation$avg_share_mechanism_annual)
-  clo.elevation$sd_mechanism <- as.numeric(clo.elevation$sd_mechanism)
-}
-
-clo.elevation$closure_mechanism <- as.factor(clo.elevation$closure_mechanism)
-clo.elevation$closure_mechanism <-  ordered(clo.elevation$closure_mechanism, levels = c("lateral closure" , "vertical closure", "lateral + vertical"))  
-
-
-# clo_per_elevation <- gap_clo_NP_91721 %>% group_by(elevation) %>%
-#   summarise(avg_clo_share_annual = round(mean(clo_share_sum_annual),4),
-#             avg_share_mechanism_annual = round(mean(clo_share_annual),4),
-#             percent_share_mechanism = avg_share_mechanism_annual/ avg_clo_share_annual,
-#             n.obs = n())
-#------
-
-# clo_per_elevation.sizebins.mechanism <- gap_clo_NP_91721 %>% group_by(elevation, closure_mechanism, gap.size) %>%
-#   summarise(avg_clo_share_annual = round(mean(clo_share_sum_annual),4),
-#             avg_share_mechanism_annual = round(mean(clo_share_annual),4),
-#             percent_share_mechanism = avg_share_mechanism_annual/ avg_clo_share_annual,
-#             n.obs = n())
-# 
-# clo_per_elevation.sizebins <- gap_clo_NP_91721 %>% group_by(elevation, gap.size) %>%
-#   summarise(avg_clo_share_annual = round(mean(clo_share_sum_annual),4),
-#             avg_share_mechanism_annual = round(mean(clo_share_annual),4),
-#             percent_share_mechanism = avg_share_mechanism_annual/ avg_clo_share_annual,
-#             n.obs = n())
-
-gap_clo_NP_91721$elevation <- ordered(gap_clo_NP_91721$elevation, levels = c("1600-1800", "1400-1600","1200-1400","1000-1200", "800-1000",  "600-800" ))
-gap_clo_NP_91721$elevation <- factor(gap_clo_NP_91721$elevation,levels=rev(levels(gap_clo_NP_91721$elevation)))
-
-# closure share per elevation 
-
-# tiff("gap_closure_elevation.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721, aes(x=gap.size , y=clo_share_sum_annual)) +geom_boxplot() + 
-#   # facet_wrap(~elevation) +
-#   facet_grid(elevation~.) +
-#   theme_minimal()+ coord_flip()  + My_Theme +
-#   labs(x = "gap size [ha]", y= "% of gap area closing annually") +    scale_fill_viridis(discrete = TRUE) 
-# dev.off()
-
-# tiff("gap_closure_elevation.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721, aes(x=elevation ,y=clo_share_sum_annual)) +geom_boxplot() + 
-#   # facet_wrap(~elevation) +
-#  # facet_grid(elevation~.) +
-#   theme_minimal()+ coord_flip()  + My_Theme +
-#   labs(x = "elevation [m]", y= "% of gap area closing annually") +    scale_fill_viridis(discrete = TRUE) 
-# dev.off()
-# 
-# 
-# # closure mechanism per elevation 
-# 
-# tiff("gap_closure_mechanism_elevation.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721, aes(x=elevation , y=clo_share_annual, fill=closure_mechanism)) + 
-#   geom_boxplot() +# facet_wrap(~elevation) +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x = "elevation [m]", y= "% of gap area closing annually", colour= "closure mechanism")
-# dev.off()
-
-# --- mean closure rates per elevation and gap size ---
-
-#order elevation labels
-# clo_per_elevation.sizebins.mechanism$elevation <- ordered(clo_per_elevation.sizebins.mechanism$elevation,
-#                                       levels = c("1600-1800", "1400-1600","1200-1400","1000-1200", "800-1000",  "600-800" ))
-# clo_per_elevation.sizebins.mechanism$elevation <- factor(clo_per_elevation.sizebins.mechanism$elevation,levels=rev(levels(clo_per_elevation.sizebins.mechanism$elevation)))
-
-# tiff("gap_closure_elevation_avg.tiff", units="in", width=12, height=8, res=300)
-# ggplot(clo_per_elevation, aes(x=elevation , y=avg_clo_share_annual )) + 
-#   geom_bar(stat = "identity") +
-#  # facet_wrap(~elevation) +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x = "elevation [m]", y= "average % of gap area closing annually", colour= "forest type")
-# dev.off()
-# 
-# tiff("gap_closure_mechanism_elevation_avg.tiff", units="in", width=12, height=8, res=300)
-# ggplot(clo_per_elevation.mechanism, aes(x=elevation , y=avg_share_mechanism_annual, fill=closure_mechanism)) + 
-#   geom_bar(stat = "identity", position=position_dodge()) +
-#   #facet_wrap(~elevation) +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x = "elevation [m]", y= "average % of gap area closing annually", colour= "forest type")
-# dev.off()
-
-# --- mean point +pointrange ----
-
-tiff("gap_closure_elevation_avg.tiff", units="in", width=12, height=8, res=300)
-ggplot(clo_per_elevation, aes(x=elevation , y=avg_clo_share_annual)) + 
-  geom_point(shape = 21, fill = "black",color = "black", size = 7) +
-  #facet_wrap(~forest_type) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "elevation [m]", y= "average % of gap area closing annually", colour= "forest type")+ 
-  geom_pointrange(aes(ymin=avg_clo_share_annual-sd_all, ymax=avg_clo_share_annual+sd_all))
-dev.off()
-
-tiff("gap_closure_mechanism_elevation_avg.tiff", units="in", width=12, height=8, res=300)
-ggplot(clo_per_elevation.mechanism, aes(x=elevation , y=avg_share_mechanism_annual, colour= closure_mechanism, group= closure_mechanism, fill=closure_mechanism)) + 
-  geom_point(shape = 21, size = 7, position=position_dodge(width=0.3)) +
-  #facet_wrap(~forest_type) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + 
-  scale_colour_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "elevation [m]", y= "average % of gap area closing annually")+ 
-  geom_pointrange(aes(ymin=avg_share_mechanism_annual-sd_mechanism, ymax=avg_share_mechanism_annual+sd_mechanism), position = position_dodge(width=0.3))
-dev.off()
-
-tiff("gap_closure_elevation.tiff", units="in", width=12, height=8, res=300)
-ggplot(clo.elevation, aes(x=elevation , y=avg_share_mechanism_annual, colour= closure_mechanism, group= closure_mechanism, fill=closure_mechanism)) + 
-  geom_point(shape = 21, size = 7, position=position_dodge(width=0.5)) +
-  #facet_wrap(~forest_type) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + 
-  scale_colour_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "elevation [m]", y= "average % of gap area closing annually")+ 
-  geom_pointrange(aes(ymin=avg_share_mechanism_annual-sd_mechanism, ymax=avg_share_mechanism_annual+sd_mechanism), position = position_dodge(width=0.5))
-dev.off()
-
-
-#reversing elevation labels
-# clo_per_elevation.sizebins$elevation <- ordered(clo_per_elevation.sizebins$elevation,
-#                                       levels = c("1600-1800", "1400-1600","1200-1400","1000-1200", "800-1000",  "600-800" ))
-# clo_per_elevation.sizebins.mechanism$elevation <- ordered(clo_per_elevation.sizebins.mechanism$elevation,
-#                                                 levels = c("1600-1800", "1400-1600","1200-1400","1000-1200", "800-1000",  "600-800" ))
-# 
-# tiff("gap_closure_elevation_avg_sizebins.tiff", units="in", width=12, height=8, res=300)
-# ggplot(clo_per_elevation.sizebins, aes(x=gap.size , y=avg_clo_share_annual)) + 
-#   geom_bar(stat = "identity") +
-#   facet_grid(elevation~.) +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x = "gap size [ha]", y= "average % of gap area closing annually", colour= "forest type")+ 
-#   geom_text(aes(label = paste0("n:",n.obs), hjust = -0.8))
-# dev.off()
-# 
-# tiff("gap_closure_mechanism_elevation_avg_sizebins.tiff", units="in", width=12, height=8, res=300)
-# ggplot(clo_per_elevation.sizebins.mechanism, aes(x=gap.size , y=avg_share_mechanism_annual, fill=closure_mechanism)) + 
-#   geom_bar(stat = "identity", color="black", position=position_dodge()) +
-#   facet_grid(elevation~.) +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x = "gap size [ha]", y= "average % of gap area closing annually", colour= "forest type")
-# dev.off()
-
-
-# --- closure by forest type ---
-
-#calculate average closure share per forest type
-clo_per_ftype <- gap_clo_NP_91721%>% group_by(forest_type, closure_mechanism) %>%
-  summarise(avg_clo_share_annual = round(mean(clo_share_sum_annual),4),
-            avg_share_mechanism_annual = round(mean(clo_share_annual),4),
-            sd_all = sd(clo_share_sum_annual),
-            sd_mechanism= sd(clo_share_annual),
-            percent_share_mechanism = avg_share_mechanism_annual/ avg_clo_share_annual)
-
-# aggregate closure mechanism information for plotting
-clo.forest <- as.data.frame(clo_per_ftype)
-clo.forest <- clo.forest[,c("closure_mechanism", "forest_type",  "avg_share_mechanism_annual","sd_mechanism") ]
-
-ftype <- as.character(unique(clo.forest$forest_type))
-clo.forest$closure_mechanism <- as.character(clo.forest$closure_mechanism)
-
-for(i in ftype) {
-  sub <- subset(clo.forest, forest_type %in% i)
-  k <- c("lateral + vertical",i, sum(sub$avg_share_mechanism_annual), sum(sub$sd_mechanism))
-  clo.forest <- rbind(clo.forest, k)
-  clo.forest$avg_share_mechanism_annual <- as.numeric(clo.forest$avg_share_mechanism_annual)
-  clo.forest$sd_mechanism <- as.numeric(clo.forest$sd_mechanism)
-}
-
-clo.forest$closure_mechanism <- as.factor(clo.forest$closure_mechanism)
-clo.forest$closure_mechanism <-  ordered(clo.forest$closure_mechanism, levels = c("lateral closure" , "vertical closure", "lateral + vertical"))  
-
-
-# clo_per_ftype.sizebins.mechanism <- gap_clo_NP_91721 %>% group_by(forest_type, closure_mechanism, gap.size) %>%
-#   summarise(avg_clo_share_annual = round(mean(clo_share_sum_annual),4),
-#             avg_share_mechanism_annual = round(mean(clo_share_annual),4),
-#             percent_share_mechanism = avg_share_mechanism_annual/ avg_clo_share_annual,
-#             sd_all = sd(clo_share_sum_annual),
-#             sd_mechanism= sd(clo_share_annual),
-#             n.obs = n())
-# 
-# clo_per_ftype.sizebins <- gap_clo_NP_91721 %>% group_by(forest_type, gap.size) %>%
-#   summarise(avg_clo_share_annual = round(mean(clo_share_sum_annual),4),
-#             avg_share_mechanism_annual = round(mean(clo_share_annual),4),
-#             percent_share_mechanism = avg_share_mechanism_annual/ avg_clo_share_annual,
-#             sd_all = sd(clo_share_sum_annual),
-#             sd_mechanism= sd(clo_share_annual),
-#             n.obs = n())
-
-
-# closure share per forest type 
-# 
-# tiff("gap_closure_ftype_box.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721, aes(x=forest_type , y=clo_share_sum_annual)) + geom_boxplot() +
-#   theme_minimal()+ coord_flip()  + My_Theme +
-#   labs(x = "forest type", y= "% of gap area closing annually") +   scale_fill_viridis(discrete = TRUE)
-# dev.off()
-# 
-# 
- # closure mechanism according to forest type 
-
-# boxplots
-
- tiff("gap_closure_mechanism_ftype_box.tiff", units="in", width=12, height=8, res=300)
-ggplot(gap_clo, aes(x=forest_type , y=clo_share_annual, fill=closure_mechanism)) +
-  geom_boxplot() +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "forest type", y= "% of gap area closing annually", colour= "closure mechanism")
- dev.off()
-
- #order labels
- gap_clo$forest_type <- ordered(gap_clo$forest_type, levels = c("Beech", "Spruce-fir-beech","Spruce","Larch-Pine"))
- gap_clo$forest_type <- factor(gap_clo$forest_type,levels=rev(levels(gap_clo$forest_type)))
- 
- tiff("gap_closure_ftype_box.tiff", units="in", width=12, height=8, res=300)
- ggplot(subset(gap_clo, closure_mechanism %in% "lateral + vertical"), aes(x=forest_type , y=clo_share_annual, fill="green")) +
-   geom_boxplot() +
-   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-   labs(x = "forest type", y= "% of gap area closing annually", colour= "closure mechanism")+ guides(fill = FALSE)   
- dev.off()
- 
- 
- 
-# --- mean closure rates per forest type
-# tiff("gap_closure_ftype_avg.tiff", units="in", width=12, height=8, res=300)
-# ggplot(clo_per_ftype, aes(x=forest_type , y=avg_clo_share_annual)) + 
-#   geom_bar(stat = "identity") +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x="forest type", y= "average % of gap area closing annually", colour= "forest type")
-# dev.off()
-
-# point with error bar
-tiff("gap_closure_ftype_avg.tiff", units="in", width=12, height=8, res=300)
-ggplot(clo_per_ftype, aes(x=forest_type , y=avg_clo_share_annual)) + 
-  geom_point(shape = 21, fill = "black",color = "black", size = 7) +
-  #facet_wrap(~forest_type) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "forest type", y= "average % of gap area closing annually", colour= "forest type")+ 
-  geom_pointrange(aes(ymin=avg_clo_share_annual-sd_all, ymax=avg_clo_share_annual+sd_all),linewidth = 2)
-dev.off()
-
-# tiff("gap_closure_mechanism_ftype_avg.tiff", units="in", width=12, height=8, res=300)
-# ggplot(clo_per_ftype, aes(x=forest_type , y=avg_share_mechanism_annual, fill=closure_mechanism)) + 
-#   geom_bar(stat = "identity", color="black", position=position_dodge()) +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x="forest type", y= "average % of gap area closing annually", colour= "forest type")
-# dev.off()
-
-# point with error bar
-tiff("gap_closure_mechanism_ftype_avg.tiff", units="in", width=12, height=8, res=300)
-ggplot(clo_per_ftype, aes(x=forest_type , y=avg_share_mechanism_annual, colour= closure_mechanism, group= closure_mechanism, fill=closure_mechanism)) + 
-  geom_point(shape = 21, size = 7, position=position_dodge(width=0.3)) +
-  #facet_wrap(~forest_type) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + 
-  scale_colour_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "forest type", y= "average % of gap area closing annually", colour= "forest type")+ 
-  geom_pointrange(aes(ymin=avg_share_mechanism_annual-sd_mechanism, ymax=avg_share_mechanism_annual+sd_mechanism), position = position_dodge(width=0.3),linewidth = 2)
-dev.off()
-
-
-My_Theme = theme(
-  title = element_text(size = 18),
-  axis.title.x = element_text(size = 24),
-  axis.text.x = element_text(size = 23),
-  axis.text.y = element_text(size = 23),
-  axis.title.y = element_text(size = 24),
-  legend.key.height = unit(1, 'cm'),
-  legend.title = element_text(size=24),
-  legend.text = element_text(size=24),
-  strip.text.x = element_text(size = 16),
-  strip.text.y = element_text(size = 16),
-  legend.position="bottom")
-
-
-tiff("gap_closure_ftype2.tiff", units="in", width=12, height=8, res=300)
-ggplot(clo.forest, aes(x=forest_type , y=avg_share_mechanism_annual, colour= closure_mechanism, group= closure_mechanism, fill=closure_mechanism)) + 
-  geom_point(shape = 21, size = 9, position=position_dodge(width=0.5)) +
-  #facet_wrap(~forest_type) +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + 
-  scale_colour_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "forest type", y= "average % of gap area closing annually", colour= "forest type")+ 
-  geom_pointrange(aes(ymin=avg_share_mechanism_annual-sd_mechanism, ymax=avg_share_mechanism_annual+sd_mechanism), position = position_dodge(width=0.5),linewidth = 2)+
-  guides(fill=guide_legend(nrow=2, byrow=TRUE)) 
-dev.off()
-
-# --- mean closure rates per forest type and gap size ---
-
-# closure mechanism mean according to forest type and gap size
-# ggplot(clo_per_ftype.sizebins, aes(x=gap.size , y=avg_clo_share_annual, fill=forest_type)) + 
-#   geom_bar(stat = "identity", color="black", position=position_dodge()) +
-#   #facet_wrap(~forest_type) +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x="gap size [ha]", y= "average % of gap area closing annually", colour= "forest type")
-# 
-# tiff("gap_closure_ftype_size_avg.tiff", units="in", width=12, height=8, res=300)
-# ggplot(clo_per_ftype.sizebins, aes(x=gap.size , y=avg_clo_share_annual)) + 
-#   geom_bar(stat = "identity", color="black", position=position_dodge()) +
-#   facet_grid(forest_type~.) +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x="gap size [ha]", y= "average % of gap area closing annually", colour= "forest type")+
-#   geom_text(aes(label = paste0("n:",n.obs), hjust = -0.8))
-# dev.off()
-# 
-# tiff("gap_closure_mechanism_ftype_size_avg.tiff", units="in", width=12, height=8, res=300)
-# ggplot(clo_per_ftype.sizebins.mechanism, aes(x=gap.size , y=avg_share_mechanism_annual, fill=closure_mechanism)) + 
-#   geom_bar(stat = "identity", color="black", position=position_dodge()) +
-#   facet_grid(forest_type~.) +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x="gap size [ha]", y= "average % of gap area closing annually", colour= "forest type")
-# dev.off()
-
-
-
-# ---- closure per elevation and forest type 
-
-clo_per_ftype.elev <- gap_clo_NP_91721 %>% group_by(elevation, forest_type) %>%
-  summarise(avg_clo_share_annual = round(mean(clo_share_sum_annual),4),
-            avg_share_mechanism_annual = round(mean(clo_share_annual),4),
-            percent_share_mechanism = avg_share_mechanism_annual/ avg_clo_share_annual,
-            sd_all = sd(clo_share_sum_annual),
-            sd_mechanism= sd(clo_share_annual),
-            n.obs = n())
-
-# clo_per_ftype.elev.mechanism <- gap_clo_NP_91721 %>% group_by(elevation, forest_type,closure_mechanism) %>%
-#   summarise(avg_clo_share_annual = round(mean(clo_share_sum_annual),4),
-#             avg_share_mechanism_annual = round(mean(clo_share_annual),4),
-#             percent_share_mechanism = avg_share_mechanism_annual/ avg_clo_share_annual,
-#             sd_all = sd(clo_share_sum_annual),
-#             sd_mechanism= sd(clo_share_annual),
-#             n.obs = n())
-
-#clo_per_ftype.elev$elev.ftype <- paste0(clo_per_ftype.elev$elevation ,"-" ,clo_per_ftype.elev$forest_type)
-
-# tiff("gap_closure_elev_ftype.tiff", units="in", width=12, height=8, res=300)
-# ggplot(clo_per_ftype.elev, aes(x=elevation , y=avg_clo_share_annual)) + 
-#   geom_bar(stat = "identity") +
-#   facet_grid(forest_type~.) +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x = "elevation [m]", y= "average % of gap area closing annually", colour= "forest type")+ 
-#   geom_text(aes(label = paste0("n:",n.obs), hjust = -0.8))
-# dev.off()
-
-# ---- mean point + pointrange
-
-tiff("gap_closure_elev_ftype.tiff", units="in", width=12, height=8, res=300)
-ggplot(clo_per_ftype.elev, aes(x=elevation , y=avg_clo_share_annual, color= forest_type, fill= forest_type)) + 
-  geom_point(shape = 21, size = 6, position=position_dodge(width=1) ) +
- # facet_grid(forest_type~.) +
-  theme_minimal()+  My_Theme +  coord_flip() +
-  labs(x = "elevation [m]", y= "average % of gap area closing annually")+ 
-  # scale_fill_brewer(palette="Set2", name = "forest type")+
-  # scale_colour_brewer(palette="Set2", name = "forest type")+
-  scale_fill_brewer(palette="Dark2", name = "forest type")+
-  scale_colour_brewer(palette="Dark2", name = "forest type")+
-  geom_pointrange(aes(ymin=avg_clo_share_annual-sd_all, ymax=avg_clo_share_annual+sd_all), position = position_dodge(width=1))+
-  guides(fill=guide_legend(nrow=2, byrow=TRUE)) 
-dev.off()
-
-# tiff("gap_closure_mechanism_elev_ftype.tiff", units="in", width=12, height=8, res=300)
-# ggplot(clo_per_ftype.elev.mechanism, aes(x=elevation , y=avg_share_mechanism_annual, fill=closure_mechanism)) + 
-#   geom_bar(stat = "identity", position="dodge") +
-#   facet_grid(forest_type~.) +
-#   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-#   labs(x = "elevation [m]", y= "average % of gap area closing annually", colour= "forest type")
-# dev.off()
-
-
-# --- closure by shape complexity ---
-
-# # closure share vs. complexity 
-# 
-# tiff("gap_closure_complexity.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721, aes(x=pa_ratio , y=clo_share_sum_annual)) + geom_point(size = 5, alpha = 0.5) +
-#   theme_minimal()+ coord_flip()  + My_Theme +
-#   labs(x = "gap complexity (p:a ratio)", y= "% of gap area closing annually")  +
-#   geom_smooth(method=lm) 
-# dev.off()
-# 
-# # closure mechanism vs. complexity vs. closure share
-# 
-# tiff("gap_closure_mechanism_complexity.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721, aes(x=pa_ratio , y=clo_share_annual, color=closure_mechanism)) + 
-#   geom_point(size = 5, alpha = 0.5) +  scale_color_brewer(palette="Dark2", name = "closure mechanism")+
-#   theme_minimal()+ coord_flip()   + My_Theme +
-#   labs(x = "gap complexity (p:a ratio)", y= "% of gap area closing annually", colour= "closure mechanism") +
-#   geom_smooth(method=lm) 
-# dev.off()
-# 
-# 
-# # closure mechanism vs. complexity vs. time step
-# 
-# tiff("gap_closure_mechanism_complexity.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721, aes(x=pa_ratio , y=clo_share_annual, color=timestep)) + 
-#   geom_point(size = 5, alpha = 0.5) +  scale_color_brewer(palette="Dark2", name = "closure mechanism")+
-#   theme_minimal()+ coord_flip()   + My_Theme +
-#   labs(x = "gap complexity (p:a ratio)", y= "% of gap area closing annually", colour= "closure mechanism") 
-# dev.off()
-# 
-# # p:a vs. aspect
-# tiff("pa_aspect.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721, aes(x=pa_ratio , color=aspect)) + 
-#   geom_boxplot()+ coord_flip() 
-# dev.off()
-# 
-# # p:a vs. elevation
-# tiff("pa_elevation.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721, aes(x=pa_ratio , color=elevation)) + 
-#   geom_boxplot()+ coord_flip() 
-# dev.off()
-# 
-# # p:a vs. forest type
-# tiff("pa_forest.tiff", units="in", width=12, height=8, res=300)
-# ggplot(gap_clo_NP_91721, aes(x=pa_ratio , color=forest_type)) + 
-#   geom_boxplot()+ coord_flip() 
-# dev.off()
-# 
-# #-------------------------------- model check of influence of gap complexity on closure share
-# 
-# gap.closure.lm<-lm(clo_share_annual ~ pa_ratio + aspect  + forest_type, data = gap_clo_NP_91721)
-# 
-# summary(gap.closure.lm)
-# 
-# par(mfrow=c(2,2))
-# plot(gap.closure.lm)
-# par(mfrow=c(1,1))
-
-    
