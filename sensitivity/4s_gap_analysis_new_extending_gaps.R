@@ -729,7 +729,7 @@ ggplot(gap_features921, aes(x=exp.area.ha, fill=factor(mmu))) + geom_density(alp
   theme_classic() +
   My_Theme +  
   scale_fill_colorblind()+
-  labs( x="size of gap creation area in log10 (ha)") +
+  labs( x="Size of gap formation area in log10 (ha)") +
   facet_grid(~ new.exp)
 dev.off()
 
@@ -758,8 +758,8 @@ ggplot(gap.creation, aes(x=new.exp , y=median.scaled, fill= mmu)) +
   scale_colour_colorblind()+
   #facet_wrap(~forest_type) +
   theme_minimal()+ coord_flip()  +  My_Theme +
-  labs(x = "creation mechanism", y= "annual rate of gap creation ( ha / 100 ha )")+ 
-  geom_pointrange(aes(ymin=median.scaled-q5_ascaled, ymax=median.scaled+q95_ascaled, colour=mmu), linewidth = 2,position=position_dodge(width=0.7))
+  labs(x = "Creation mechanism", y= "Annual rate of gap formation ( ha / 100 ha )")+ 
+  geom_pointrange(aes(ymin=q5_ascaled, ymax=q95_ascaled, colour=mmu), linewidth = 2,position=position_dodge(width=0.7))
 dev.off()
 
 

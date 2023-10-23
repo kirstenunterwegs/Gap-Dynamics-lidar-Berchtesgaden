@@ -1,24 +1,28 @@
 library(terra)
 
-#load extent of semsitivity analysis area
-sensitivity.a <- vect("C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/raw/sensitivity_analysis_area.gpkg")
+#--- crop artifacts masked CHM to subarea for sensitivity analysis
 
+chm9 <- rast("F:/Projects/CanopyDynamicsBDG/data/CHM_data/CHM_data/chm9_artifacts_masked.tif")
+chm17<- rast("F:/Projects/CanopyDynamicsBDG/data/CHM_data/CHM_data/chm17_artifacts_masked.tif")
+chm21 <- rast("F:/Projects/CanopyDynamicsBDG/data/CHM_data/CHM_data/chm21_artifacts_masked.tif")
 
-# load and crop original CHM for creating new gap layers
-wd <- "F:/Projects/CanopyDynamicsBDG/data/CHM_data/"
-setwd(wd)
+#subarea <- vect("C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/sensitivity_analysis_subarea.gpkg")
+subarea <- vect("C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/variability_analysis_subarea.shp")
+closed.forest <- vect("F:/Projects/CanopyDynamicsBDG/data/data/Waldmaske/closed_forest.shp")
+closed.forest <- project(closed.forest, subarea)
 
-chm9 <- rast("chm9_artifacts_masked.tif")
-chm17<- rast("chm17_artifacts_masked.tif")
-chm21 <- rast("chm21_artifacts_masked.tif")
+chm9.sub <- crop(mask(chm9, subarea), subarea)
+chm9.sub.f <- crop(chm9.sub, closed.forest, mask =T)
 
-chm9.crop <-  crop(chm9, sensitivity.a, snap="near", mask=T)
-chm17.crop <- crop(chm17, sensitivity.a, snap="near", mask=T)
-chm21.crop <-  crop(chm21, sensitivity.a, snap="near", mask=T)
+chm17.sub <- crop(mask(chm17, subarea), subarea)
+chm17.sub <- crop(chm17.sub, closed.forest, mask =T)
 
-writeRaster(chm9.crop,"F:/Projects/CanopyDynamicsBDG/data/sensitivity/CHM_subarea/chm9_sub_sensitivity.tif")
-writeRaster(chm17.crop,"F:/Projects/CanopyDynamicsBDG/data/sensitivity/CHM_subarea/chm17_sub_sensitivity.tif")
-writeRaster(chm21.crop,"F:/Projects/CanopyDynamicsBDG/data/sensitivity/CHM_subarea/chm21_sub_sensitivity.tif")
+chm21.sub <- crop(mask(chm21, subarea), subarea)
+chm21.sub <- crop(chm21.sub, closed.forest, mask =T)
+
+writeRaster(chm9.sub, "F:/Projects/CanopyDynamicsBDG/data/sensitivity/CHM_subarea/chm9_sub_sensitivity.tif")
+writeRaster(chm17.sub, "F:/Projects/CanopyDynamicsBDG/data/sensitivity/CHM_subarea/chm17_sub_sensitivity.tif")
+writeRaster(chm21.sub, "F:/Projects/CanopyDynamicsBDG/data/sensitivity/CHM_subarea/chm21_sub_sensitivity.tif")
 
 # load and crop sensitivity gap layers
 wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/processed/"
