@@ -109,6 +109,7 @@ class_df <- as.data.frame(class_df)
 
 saveRDS(class_df, "C:/Users/ge92vuh/Documents/MA_gap_dynamics/new_expanding_gap_classification/new_exp_gap_class_917.rds")
 class_df<- readRDS("C:/Users/ge92vuh/Documents/MA_gap_dynamics/new_expanding_gap_classification/new_exp_gap_class_917.rds")
+class_df<- readRDS("processed/creation/new_exp_gap_class_917.rds")
 
 class_df_917 <- class_df
 names(class_df) <- c("gap_id", "class") #rename columns
