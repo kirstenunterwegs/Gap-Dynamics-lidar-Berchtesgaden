@@ -52,50 +52,15 @@ exp1721 <- classify(exp_clo1721, cbind(1, NA)) #replace 1=closure with NA to get
 
 # --- load NP information 
 
-foresttype <- rast("raw/forest_types2020.tif")
+foresttype <- rast("processed/environment_features/forest_type2020_reclass_1m.tif")
 management <- vect("raw/npb_zonierung_22_epsg25832.shp")
 aspect<-  rast("processed/environment_features/aspect_2021_classified_1m.tif")
-elevation <- rast("processed/environment_features/berchtesgaden_2021_classified_200steps_dtm_1m.tif")
-closed.forest <- vect("raw/closed_forest_epsg25832.shp")
-
-# ---- crop layers to research sites:
-
-# exclude sites > 1800 m
-m <- c(0,6,1, 6,8,NA) #7 and 8 are areas > 1800 m elevation
-rclmat <- matrix(m, ncol=3, byrow=TRUE)
-elevation.1800 <- classify(elevation, rclmat, include.lowest=TRUE)
-elevation.1800.poly <- as.polygons(elevation.1800, trunc=TRUE, dissolve=TRUE, values=TRUE, #prepare masking vector for elevation with area < 1800m
-            na.rm=TRUE, na.all=FALSE, extent=FALSE)
-
-elevation.below1800 <- mask(elevation, elevation.1800.poly)
-
-writeRaster(elevation.below1800, "processed/environment_features/elevation_below1800_200steps.tif")
-
 elevation.below1800 <- rast("processed/environment_features/elevation_below1800_200steps.tif")
-
-#freq(elevation.below1800) #check if I really excluded all pixels >1800 m
+closed.forest <- vect("raw/closed_forest_epsg25832.shp")
 
 # extract core zone to exclude management zone
 core.zone <- subset(management, management$zone_id == 4, c(1:2))
 
-# -- rasterize NP information ---NOT needed here
-
-# #crate empty raster for rasterization
-# r_1 <- rast()
-# ext(r_1) <- ext(gaps2017)
-# terra::res(r_1) <- terra::res(gaps2017)  
-# terra::crs(r_1) <- terra::crs(gaps2017)
-# 
-# # rasterize forest type Information
-# ftype <- terra::rasterize(foresttype, r_1, field="type")
-
-# --- reclassify forest types to combine spruce-fir-beech (2) and spruce-fir (3)
-foresttype <- subst(foresttype, 3, 2) 
-# resample to match resolution
-foresttype <- resample(foresttype, elevation.below1800, method="near")
-
-writeRaster(foresttype, "processed/environment_features/forest_type2020_1m.tif")
-foresttype <- rast("processed/environment_features/forest_type2020_1m.tif")
 
 # crop all layers to same extent
 
@@ -150,81 +115,6 @@ write_rds(df2, "processed/creation/updated/stack_2021_new_exp_df.rds")
 df2<- readRDS("processed/creation/updated/stack_2021_new_exp_df.rds")
 
 
-#-------calculate area shares per category 
-
-gap_stack_2017.closed <- rast("processed/creation/updated/stack.2017.all.gap.information.expansion.tif")
-
-df.area <- as.data.frame(gap_stack_2017.closed, na.rm = FALSE) 
-
-#recode forest type to drop NAs
-# df.area <- df.area %>% mutate( ftype = as.numeric(recode(forest_type,
-#                                                         'broadleaved' = 1,
-#                                                         'coniferous' = 2,
-#                                                         'larch-dominant' = 3,
-#                                                         'mixed stands' = 4)))
-
-#delete all pixels with no forest type information, as we do not consider these areas + all areas >1800 m 
-df.area.nona <- df.area %>% drop_na(elevation)
-df.area.nona <- df.area.nona %>% drop_na(forest_type)
-df.area.nona <- df.area.nona[df.area.nona$elevation != 7,] #pixels which have been left at boundaries of crop area
-
-head(df.area.nona)  
-
-#keep only necessary environmental feature columns
-keeps <- c("elevation","aspect", "forest_type")
-df.area.nona = df.area.nona[keeps] 
-
-saveRDS(df.area.nona, "processed/creation/updated/df.area.nona.rds")
-df.area.nona <- readRDS("processed/creation/updated/df.area.nona.rds") 
-
-
-df.area.long <- gather(df.area.nona, category, class)
-
-head(df.area.long)
-
-area_share_class <- df.area.long %>% group_by(category,class) %>% 
-  summarize(total_area =round((sum(!is.na(class)))/10000, 2)) # divided by 10.000 to get ha (res 1m)
-
-area_share_class <- area_share_class %>% group_by(category) %>% 
-  mutate(total_area_category =round((sum(total_area)), 2),
-            class_area_perc = round(total_area/ total_area_category, 4)) 
-
-#exclude NAs
-# area_share_class<- area_share_class[!is.na(area_share_class$class),]
-
-# recode category labels
-class.name <- c("North", "East", "South", "West", 
-                "600-800", "800-1000", "1000-1200", "1200-1400", "1400-1600", "1600-1800", 
-               # "broadleaved", "coniferous", "larch-dominant", "mixed stands") #old forest type classification
-                "Beech", "Spruce-fir-beech", "Spruce", "Larch-Swiss stone pine", "Dwarf mountain pine")
-area_share_class$class.name <- class.name
-
-write_rds(area_share_class, "processed/creation/updated/area_share_per_class.rds")
-
-
-# --------calculate area shares per elevation - forest type combination !!!!! neu berechnen wenn notwendig!!!
-df.area.nona$elev.ftype = paste0(df.area.nona$elevation, df.area.nona$forest_type)
-
-area_share_class.elev.ftype <- df.area.nona %>% group_by(elev.ftype) %>% 
-  summarize(total_area =round((sum(!is.na(elev.ftype)))/10000, 2)) # divided by 10.000 to get ha (res 1m)
-
-area_share_class.elev.ftype  <- area_share_class.elev.ftype %>% 
-  mutate(total_area_category =round((sum(total_area)), 2),
-         class_area_perc = round(total_area/ total_area_category, 4)*100) 
-
-elev.ftype <- c("600-800-Beech", "600-800-Spruce-fir-beech", "600-800-Spruce", "600-800-Larch-Swiss stone pine","600-800-Dwarf mountain pine",
-                "800-1000-Beech","800-1000-Spruce-fir-beech","800-1000-Spruce", "800-1000-Larch-Swiss stone pine","800-1000-Dwarf mountain pine",
-                "1000-1200-Beech", "1000-1200-Spruce-fir-beech","1000-1200-Spruce","1000-1200-Larch-Swiss stone pine", "1000-1200-Dwarf mountain pine",
-                "1200-1400-Beech","1200-1400-Spruce-fir-beech","1200-1400-Spruce","1200-1400-Larch-Swiss stone pine", "1200-1400-Dwarf mountain pine",
-                "1400-1600-Beech", "1400-1600-Spruce-fir-beech","1400-1600-Spruce","1400-1600-Larch-Swiss stone pine", "1400-1600-Dwarf mountain pine",
-                "1600-1800-Spruce-fir-beech","1600-1800-Spruce","1600-1800-Larch-Swiss stone pine","1600-1800-Dwarf mountain pine" )
-area_share_class.elev.ftype$elevation.ftype <- elev.ftype
-
-write_rds(area_share_class.elev.ftype, "processed/creation/updated/area_share_per_class.elev.ftype.rds")
-
-area_share_class.elev.ftype.sub40 <- area_share_class.elev.ftype %>% filter(total_area >40)
-
-write_rds(area_share_class.elev.ftype.sub40, "processed/creation/updated/area_share_per_class.elev.ftype.sub40.rds")
 
 # --------calculate features per gap.id
 
