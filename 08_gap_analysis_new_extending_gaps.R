@@ -253,19 +253,6 @@ gap_features921 <- rbind(gap_features_917, gap_features_1721)
 gap_features921 <- gap_features921[gap_features921$elevation != "1800-2000",]
 gap_features921 <- gap_features921[gap_features921$area.ha >= 0.04,] #delete gaps smaller than 400m2, as they emerged out of the croping of the reserach area
 
-#calculate amount of expansion (check with MA) 2017
-gap_features_917 <- subset(gap_features921, year %in% c("9-17"))
-sum(gap_features_917$exp.area.ha)/8 # 9.41 // not filtered -9.48  fits values of MA (9.89 ha/yr, as I excluded areas >1800m)
-sum(gap_features_917$new.exp == "new") # 195 // old-213
-sum(gap_features_917$new.exp == "expanding") #3497 // old-3750
-sum(gap_features_917$new.exp == "stable") # 105 // old-122
-
-#calculate amount of expansion (check with MA) 2021
-gap_features_1721 <- subset(gap_features921, year %in% c("17-21"))
-sum(gap_features_1721$exp.area.ha)/4 #50.86// old-51.38197 fits values of MA (48.5ha/yr, as I excluded areas >1800m)
-sum(gap_features_1721$new.exp == "new") # 624 // old-686
-sum(gap_features_1721$new.exp == "expanding") # 3240 // old-3465
-sum(gap_features_1721$new.exp == "stable") # 0 // old-0
 
 # exclude stable/shrinking gaps for the analysis
 gap_features921 <- subset(gap_features921, new.exp %in% c("new", "expanding")) 
@@ -281,6 +268,191 @@ gap_features921$forest_type <- ordered(gap_features921$forest_type, levels = c("
 gap_features921$forest_type <- factor(gap_features921$forest_type,levels=rev(levels(gap_features921$forest_type)))
 
 
+# --- calculate area and share of new and expanding gaps
+
+summary_exp_new <- gap_features921 %>%
+  group_by(new.exp) %>%
+  summarise(total_exp_area = sum(exp.area.ha),
+            avg_exp_area = mean(exp.area.ha),
+            num_observations = n())%>%
+  mutate(share_expanding_gaps = (total_exp_area / sum(total_exp_area)) * 100)
+
+
+# ---- distance calculation between new and existing gaps ----
+
+# convert raster gaps into polygons
+
+# --- 2009 - 2017 ---
+
+gaps_poly.917 <- as.polygons(gap_stack_2017$gap.id)
+
+gaps_poly <- terra::extract(gap_stack_2017$new_extended, gaps_poly.917, fun=max, bind=TRUE)
+gaps_poly_new <- gaps_poly[gaps_poly$new_extended == 0, ]
+gaps_poly_rest <- gaps_poly[gaps_poly$new_extended != 0, ]
+
+gap_distance <- distance(gaps_poly_new, gaps_poly_rest)
+
+
+distance_gaps_m <- as.matrix(distance_gaps)
+distance.df <- as.data.frame(distance_gaps_m)
+
+# extract nearest gap distance
+gap_dist <- as.data.frame(ncol(2), nrow(0))
+
+for(i in 1:nrow(gap_distance)) {       # for-loop over rows
+  dist_info <- c(i,sort(gap_distance[,i])[1])
+  gap_dist <- rbind(gap_dist, dist_info)
+  names(gap_dist) <- c("gap_id", "dist_near_gap")
+}
+
+
+quantile(gap_dist$dist_near_gap)
+# 0%         25%         50%         75%        100% 
+# 6.40   495.101      700.86      954.97      1967.067 
+
+mean(gap_dist$dist_near_gap) # 738.7354
+
+saveRDS(gap_dist, "processed/creation/dist_new_gap.917.rds")
+
+My_Theme = theme(
+  title = element_text(size = 18),
+  axis.title.x = element_text(size = 30),
+  axis.text.x = element_text(size = 24,angle = 45, hjust=1),
+  axis.text.y = element_text(size = 24),
+  axis.title.y = element_text(size = 30),
+  legend.key.height = unit(1, 'cm'),
+  legend.title = element_text(size=30),
+  legend.text = element_text(size=30),
+  strip.text.x = element_text(size = 20),
+  panel.spacing = unit(2, "lines"),
+  legend.position="top")
+
+tiff("C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/gap_creation/new_gap_dist_917.tiff", units="in", width=12, height=8, res=300)
+ggplot(gap_dist, aes(x=dist_near_gap)) + geom_histogram(bins=100) +
+  theme_classic() +
+  geom_histogram(color = "#000000", fill = "lightgreen") +
+  geom_vline(aes(xintercept = mean(dist_near_gap)), color = "#000000", size = 1.25) +
+  geom_vline(aes(xintercept = mean(dist_near_gap) + sd(dist_near_gap)), color = "#000000", size = 1, linetype = "dashed") +
+  geom_vline(aes(xintercept = mean(dist_near_gap) - sd(dist_near_gap)), color = "#000000", size = 1, linetype = "dashed")+
+  labs(x= "Distance from new gap to nearest existing gap (m)", y= "Density") + My_Theme
+dev.off()
+
+# --- 2017 - 2021 ---
+
+gaps_poly.1721 <- as.polygons(gap_stack_2021$gap.id)
+
+gaps_poly <- terra::extract(gap_stack_2021$new_extended, gaps_poly.1721, fun=max, bind=TRUE)
+gaps_poly_new <- gaps_poly[gaps_poly$new_extended == 0, ]
+gaps_poly_rest <- gaps_poly[gaps_poly$new_extended != 0, ]
+
+gap_distance <- distance(gaps_poly_new, gaps_poly_rest)
+
+
+# extract nearest gap distance
+gap_dist <- as.data.frame(ncol(2), nrow(0))
+
+for(i in 1:nrow(gap_distance)) {       # for-loop over rows
+  dist_info <- c(i,sort(gap_distance[,i])[1])
+  gap_dist <- rbind(gap_dist, dist_info)
+  names(gap_dist) <- c("gap_id", "dist_near_gap")
+}
+
+
+quantile(gap_dist$dist_near_gap)
+# 0%       25%       50%       75%      100% 
+# 1.00000  64.05803 157.00225 257.05472 830.67021 
+
+mean(gap_dist$dist_near_gap) # 179.6479
+
+saveRDS(gap_dist, "processed/creation/dist_new_gap.1721.rds")
+
+tiff("C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/gap_creation/new_gap_dist_1721.tiff", units="in", width=12, height=8, res=300)
+ggplot(gap_dist, aes(x=dist_near_gap)) + geom_histogram(bins=100) +
+  theme_classic() +
+  geom_histogram(color = "#000000", fill = "lightgreen") +
+  geom_vline(aes(xintercept = mean(dist_near_gap)), color = "#000000", size = 1.25) +
+  geom_vline(aes(xintercept = mean(dist_near_gap) + sd(dist_near_gap)), color = "#000000", size = 1, linetype = "dashed") +
+  geom_vline(aes(xintercept = mean(dist_near_gap) - sd(dist_near_gap)), color = "#000000", size = 1, linetype = "dashed")+
+  labs(x= "Distance from new gap to nearest existing gap (m)", y= "Density") + My_Theme
+dev.off()
+
+# --- combine both time steps
+
+gap_dist1 <- readRDS("processed/creation/updated/dist_new_gap.917.rds")
+gap_dist2 <- readRDS("processed/creation/updated/dist_new_gap.1721.rds")
+
+gap_dist <- rbind(gap_dist1, gap_dist2)
+
+quantile(gap_dist$dist_near_gap)
+# 0%        25%        50%        75%       100% 
+# 1.00000   88.13058  203.49447  417.66669 1967.06507 
+
+mean(gap_dist$dist_near_gap) # 312.1125
+
+tiff("C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/gap_creation/new_gap_dist_921.tiff", units="in", width=12, height=8, res=300)
+ggplot(gap_dist, aes(x=dist_near_gap)) + geom_histogram(bins=100) +
+  theme_classic() +
+  geom_histogram(color = "#000000", fill = "lightgreen") +
+  geom_vline(aes(xintercept = mean(dist_near_gap)), color = "#000000", size = 1.25) +
+  geom_vline(aes(xintercept = mean(dist_near_gap) + sd(dist_near_gap)), color = "#000000", size = 1, linetype = "dashed") +
+  geom_vline(aes(xintercept = mean(dist_near_gap) - sd(dist_near_gap)), color = "#000000", size = 1, linetype = "dashed")+
+  labs(x= "Distance from new gap to nearest existing gap (m)", y= "Density") + My_Theme
+dev.off()
+
+
+#------- check for randomness of new gap distance to existing gaps
+
+# mask reserach area with existing gaps (research area = forest type, already adjusted to core zone)
+
+gap_masked_research <- mask(gap_stack_2017.closed$forest_type, gap_stack_2017.closed$new_extended, maskvalue = 1)
+
+# draw random points representing new gaps within the research area:
+
+random_gaps <- spatSample(gap_masked_research, size=300,method = "random", replace=FALSE, as.points=TRUE, na.rm=TRUE )
+
+writeRaster(gap_masked_research, "processed/creation/distance_newgap/sample_area_gapmasked_2017.tif", overwrite=T)
+writeVector(random_gaps, "processed/creation/distance_newgap/random_new_gap.gpkg")
+
+# calculate distances:
+
+gaps_poly.917 <- as.polygons(gap_stack_2017$gap.id) 
+
+gaps_poly <- terra::extract(gap_stack_2017$new_extended, gaps_poly.917, fun=max, bind=TRUE)
+
+gaps_poly_rest <- gaps_poly[gaps_poly$new_extended != 0, ]
+
+gap_distance <- distance(random_gaps, gaps_poly_rest)
+
+
+# extract nearest gap distance
+gap_dist <- as.data.frame(ncol(2), nrow(0))
+
+for(i in 1:nrow(gap_distance)) {       # for-loop over rows
+  dist_info <- c(i,sort(gap_distance[,i])[1])
+  gap_dist <- rbind(gap_dist, dist_info)
+  names(gap_dist) <- c("gap_id", "dist_near_gap")
+}
+
+
+quantile(gap_dist$dist_near_gap)
+# 0%       25%       50%       75%      100% 
+# 30.37269 313.80819 485.01804 635.44262 946.03620 
+
+mean(gap_dist$dist_near_gap) # 477.7631
+
+saveRDS(gap_dist, "processed/creation/distance_newgap/dist_new_gap.917_randomtest.rds")
+
+tiff("C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/gap_creation/new_gap_dist_917_randomtest.tiff", units="in", width=12, height=8, res=300)
+ggplot(gap_dist, aes(x=dist_near_gap)) + geom_histogram(bins=100) +
+  theme_classic() +
+  geom_histogram(color = "#000000", fill = "lightgreen") +
+  geom_vline(aes(xintercept = mean(dist_near_gap)), color = "#000000", size = 1.25) +
+  geom_vline(aes(xintercept = mean(dist_near_gap) + sd(dist_near_gap)), color = "#000000", size = 1, linetype = "dashed") +
+  geom_vline(aes(xintercept = mean(dist_near_gap) - sd(dist_near_gap)), color = "#000000", size = 1, linetype = "dashed")+
+  labs(x= "Distance from random new gap to nearest existing gap (m)", y= "Density") + My_Theme
+dev.off()
+
+# --- end distance calculation ---
 
 
 # ---- calculate annual gap creation rate ----
@@ -304,6 +476,7 @@ gap.creation <- gap_features921 %>% group_by(new.exp, year) %>%
         q95 = quantile(gap.creation.annual, 0.95),
         q97.5 = quantile(gap.creation.annual, 0.975),)
 
+saveRDS(gap.creation, "processed/creation/gap_creation_final.rds" )
 
 #--------- area scaling
 
