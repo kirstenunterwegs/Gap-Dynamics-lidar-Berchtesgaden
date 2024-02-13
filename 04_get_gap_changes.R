@@ -51,5 +51,5 @@ gap_change_1721 <- getGapChanges(gaps2017, gaps2021)
 
 # --- write gap changes to file ---
 
-terra::writeRaster(gap_change_917, "processed/gap_change/gap_change_917_cn2cr2_mmu400n8.tif",overwrite=TRUE)
-terra::writeRaster(gap_change_1721, "processed/gap_change/gap_change_1721_cn2cr2_mmu400n8.tif",overwrite=TRUE)
+terra::writeRaster(gap_change_917, "processed/gap_change/gap_change_917_cn2cr2_mmu400n8.tif")
+terra::writeRaster(gap_change_1721, "processed/gap_change/gap_change_1721_cn2cr2_mmu400n8.tif")
