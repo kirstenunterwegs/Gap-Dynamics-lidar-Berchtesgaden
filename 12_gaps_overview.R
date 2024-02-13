@@ -1,3 +1,9 @@
+###########################################################################
+
+# Identifying number of and area covered by gaps in reserach area per year
+
+##########################################################################
+
 
 library(dplyr)
 library(tidyr)
@@ -27,7 +33,7 @@ gap.stack <- c(gaps2009, gaps2017, gaps2021)
 foresttype <- rast("processed/environment_features/forest_type2020_reclass_1m.tif")
 management <- vect("F:/Projects/CanopyDynamicsBDG/data/NP_data/npb_zonierung_22_epsg25832.shp")
 elevation.below1800 <- rast("processed/environment_features/elevation_below1800_200steps.tif")
-# +++ add closed forest for masking!!!
+
 
 # exclude management zone
 core.zone <- subset(management, management$zone_id == 4, c(1:2))
@@ -39,43 +45,42 @@ gap.stack <- mask(gap.stack, foresttype)
 
 writeRaster(gap.stack, "processed/gaps_final/gaps_masked_reserach_area_paper.tif")
 
-# filter out gaps < 400m2 ---------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!
-
-n_9 <- unique(gap.stack$berchtesgaden_2009_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight) 
-n_17 <- unique(gap.stack$berchtesgaden_2017_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight)
-n_21 <- unique(gap.stack$berchtesgaden_2021_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight)
-
-n_gaps <- length(n_9$berchtesgaden_2009_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight) + 
-          length(n_17$berchtesgaden_2017_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight)+ 
-          length(n_21$berchtesgaden_2021_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight)
-
+# convert masked gap stack to data frame & write to disk
 gap.stack.df <- as.data.frame(gap.stack)
 saveRDS(gap.stack.df,"processed/gaps_final/gaps_masked_reserach_area_paper.df.rds" )
 
 gap.stack.df <- readRDS("processed/gaps_final/gaps_masked_reserach_area_paper.df.rds")
 names(gap.stack.df) <- c("gaps9", "gaps17", "gaps21")
 
-# --- summarize the size of gaps:
+# --- summarize number & area of gaps:
 
 # Gather the data into long format
 gathered_df <- gap.stack.df %>%
-  pivot_longer(cols = everything(), names_to = "column_name", values_to = "value") %>%
-  drop_na()  # Drop rows with NA values
+  pivot_longer(cols = everything(), names_to = "year", values_to = "gap_id") %>%
+  filter(!if_all(.cols = everything(), is.na))%>% # Drop rows with all NAs
+  count(year, gap_id) %>%
+  filter(n >= 400) %>% # filter out gaps < 400m2, which emerged due to cropping of gaps layers to reserach area
+  filter(!is.nan(gap_id))# Remove rows where gap_id is NaN
+
+# overall gap area
+sum(gathered_df$n / 10000) # 2730.522 ha
 
 # Count the occurrences of each value in each column
-value_counts <- gathered_df %>%
-  group_by(column_name, value) %>%
-  summarise(count = n())
+gap_counts <- gathered_df %>%
+  group_by(year) %>%
+  summarize(number_gaps = length(unique(gap_id)))
 
-sum(value_counts$count / 10000) # 2745.052 ha
+# overall number of gaps
+sum(gap_counts$number_gaps) # 11331 
 
 
-# Extract unique values for gaps9
-unique_values_gaps9 <- unique(gathered_df$value[gathered_df$column_name == "gaps9"])
 
-# Extract unique values for gaps17
-unique_values_gaps17 <- unique(gathered_df$value[gathered_df$column_name == "gaps17"])
-
-# Extract unique values for gaps21
-unique_values_gaps21 <- unique(gathered_df$value[gathered_df$column_name == "gaps21"])
+# # Extract unique values for gaps9
+# unique_values_gaps9 <- unique(gathered_df$value[gathered_df$year == "gaps9"])
+# 
+# # Extract unique values for gaps17
+# unique_values_gaps17 <- unique(gathered_df$value[gathered_df$year == "gaps17"])
+# 
+# # Extract unique values for gaps21
+# unique_values_gaps21 <- unique(gathered_df$value[gathered_df$year == "gaps21"])
 
