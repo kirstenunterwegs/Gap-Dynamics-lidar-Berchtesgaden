@@ -19,7 +19,7 @@ setwd(wd)
 
 # --- load gap layers ----
 
-gaps2009 <- rast("processed/gaps_final/berchtesgaden_2009_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
+gaps2009 <- terra::rast("processed/gaps_final/berchtesgaden_2009_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
 gaps2017 <- rast("processed/gaps_final/berchtesgaden_2017_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
 gaps2021 <- rast("processed/gaps_final/berchtesgaden_2021_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
 
@@ -39,19 +39,26 @@ gap_change_class <- function(gap_layer1, gap_layer2){
   return(exp_clo)
 } 
 
-gaps2009 <- crop(gaps2009, gaps2021, snap="near",mask=TRUE)
-gaps2017 <-crop(gaps2017, gaps2021, snap="near",mask=TRUE)
 
-exp_clo_917 <- gap_change_class(gaps2009, gaps2017)
-exp_clo_1721 <- gap_change_class(gaps2017, gaps2021)
-exp_clo_921 <- gap_change_class(gaps2009, gaps2021)
+common_extent <- intersect(intersect(ext(gaps2009), ext(gaps2017)), ext(gaps2021))
+
+gaps2009_aligned <- crop(gaps2009, common_extent)
+gaps2017_aligned <- crop(gaps2017, common_extent)
+gaps2021_aligned <- crop(gaps2021, common_extent)
+
+# gaps2009 <- crop(gaps2009, gaps2021, snap="near",mask=TRUE)
+# gaps2017 <-crop(gaps2017, gaps2021, snap="near",mask=TRUE)
+
+exp_clo_917 <- gap_change_class(gaps2009_aligned, gaps2017_aligned)
+exp_clo_1721 <- gap_change_class(gaps2017_aligned, gaps2021_aligned)
+exp_clo_921 <- gap_change_class(gaps2009_aligned, gaps2021_aligned)
 
 
 terra::writeRaster(exp_clo_917, "processed/gap_change/formation_closure_917_cn2cr2_mmu400n8_filtered.tif")
 terra::writeRaster(exp_clo_1721, "processed/gap_change/formation_closure_1721_cn2cr2_mmu400n8_filtered.tif")
 terra::writeRaster(exp_clo_921, "processed/gap_change/formation_closure_921_cn2cr2_mmu400n8_filtered.tif")
 
-# --- extract vegeation growth in gap closure areas per time step ---
+# --- extract vegetation growth in gap closure areas per time step ---
 
 exp_clo_917 <- rast("processed/gap_change/formation_closure_917_cn2cr2_mmu400n8_filtered.tif")
 exp_clo_1721 <- rast("processed/gap_change/formation_closure_1721_cn2cr2_mmu400n8_filtered.tif")
