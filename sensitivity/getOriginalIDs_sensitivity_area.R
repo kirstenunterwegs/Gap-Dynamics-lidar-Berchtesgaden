@@ -1,3 +1,12 @@
+#################################################
+#
+# Script to crop original gaps to sensitivity area
+# and extract gap IDs of original gaps 
+# (MMU 400 m^2, height threshold 5m)
+# within the area for sensitivity analysis
+#
+#################################################
+
 library(terra)
 
 setwd("C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/")
@@ -21,6 +30,8 @@ gaps21 <- crop(gaps21, sensitivity.a, snap="near", mask=T)
 
 gap.stack <- c(gaps9, gaps17,  gaps21)
 names(gap.stack) <- c(9,17,21) # observation years
+
+writeRaster("processed/gaps_sensitivity/gap.stack.mmu400.sensitivity.tif")
 
 # prepare loop to extract IDs for sensitivity area
 
@@ -46,5 +57,5 @@ for (r in numbers) {
 
 }
 
-saveRDS(sensitivity.ids, "processed/sensitivity/origID_mmu400_sensitivityAoi.rds")
+saveRDS(sensitivity.ids, "processed/sensitivity/mmu_sensitivity/origID_mmu400_sensitivityAoi.rds")
 
