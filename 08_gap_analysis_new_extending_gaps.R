@@ -564,6 +564,28 @@ forest_gap$new.exp <- as.factor(forest_gap$new.exp)
 forest_gap$forest_type <- ordered(forest_gap$forest_type, levels = c("Beech", "Spruce-fir-beech","Larch-Pine","Spruce"))
 
 
+# --- gap formation by elevation (for later contrasting formation and closure by elevation belt)
+
+gap.creation.elevation<- gap_features921 %>% group_by(new.exp, year, elevation) %>%
+  summarize(gap.creation.ha = sum(exp.area.ha),
+            n.gaps = length(unique(gap.id)),
+            ha.per.gap = round(gap.creation.ha / n.gaps, 3)) %>%
+  mutate(time = recode(year,
+                       `9-17`=8,
+                       `17-21`=4),
+         gap.creation.annual = round(gap.creation.ha/time,2)) %>%
+  group_by(new.exp, elevation)%>%
+  mutate(avg.gap.creation.annual = round(mean(gap.creation.annual),2),
+         sd = sd(gap.creation.annual),
+         median = round(median(gap.creation.annual),2),
+         q5 = quantile(gap.creation.annual, 0.05),
+         q95 = quantile(gap.creation.annual, 0.95))
+
+gap.creation.elevation$elevation <- ordered(gap.creation.elevation$elevation, levels = c("1600-1800", "1400-1600","1200-1400","1000-1200", "800-1000",  "600-800" ))
+gap.creation.elevation$elevation <- factor(gap.creation.elevation$elevation,levels=rev(levels(gap.creation.elevation$elevation)))
+
+saveRDS(gap.creation.elevation, "processed/creation/gap_creation_elevation.rds")
+
 # --------------------------------------------------- graphs
 
 wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/gap_creation/"
