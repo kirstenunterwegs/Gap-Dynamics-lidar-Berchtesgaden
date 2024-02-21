@@ -22,7 +22,7 @@ setwd(wd)
 # --- prepare closure mechanism dataframes per time step ---
 
 
-#prepare layers to limit analysis to core zone, below 1800m and with forest type information
+# prepare layers to limit analysis to core zone, below 1800m and with forest type information
 
 # --- load NP information 
 
@@ -140,7 +140,7 @@ gap_clo_per_id_nona_917<-gap_clo_per_id_nona %>%
 
 
 #merge closure mechanism with gaps
-gap_closure_mechanism1721 <- rast("processed/closure/gap_closure_mechanism1721_new.tif")
+gap_closure_mechanism1721 <- rast("processed/closure/gap_closure_mechanism1721.tif")
 gaps2017 <- rast("processed/gaps_final/berchtesgaden_2017_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
 
 # crop and stack
@@ -148,6 +148,8 @@ gaps2017 <- rast("processed/gaps_final/berchtesgaden_2017_chm_1m_patchid_cn2cr2_
 gaps2017 <- crop(gaps2017, gap_closure_mechanism1721)
 gap_closure_mechanism_stack_1721 <- c(gap_closure_mechanism1721, gaps2017)
 
+elevation.below1800 <- crop(elevation.below1800, gap_closure_mechanism1721)
+foresttype <- crop(foresttype, gap_closure_mechanism1721)
 # mask stack to research area
 
 gap_closure_mechanism_stack_1721 <- mask(gap_closure_mechanism_stack_1721, elevation.below1800)
@@ -162,7 +164,7 @@ names(gap_closure_mechanism_stack.df_1721) <- c("closure_mechanism", "gap_id")
 
 # # save data frame in case RAM runs full
 # saveRDS(gap_closure_mechanism_stack.df_1721,"processed/closure/gap_closure_mechanism_pergap_1721.rds" )
-# gap_closure_mechanism_stack.df_1721 <- readRDS("processed/closure/gap_closure_mechanism_pergap_1721.rds" )
+ gap_closure_mechanism_stack.df_1721 <- readRDS("processed/closure/gap_closure_mechanism_pergap_1721_2.rds" )
 
 
 # aggregate closure and gap information 
@@ -232,6 +234,9 @@ gap_clo_per_id_nona_1721<-gap_clo_per_id_nona %>%
 
 # ------------merge 9-17 and 17-21 dfs for comparison -----------
 
+
+
+
 gap_clo_per_id_nona_1721$timestep <- "17-21"
 gap_clo_per_id_nona_917$timestep <- "9-17"
 
@@ -263,14 +268,9 @@ stats_elevation <- stats_elevation %>% mutate( timestep = as.factor(recode(year,
                                                                            `2017`="17-21")))
 
 # merge environmental feature information with gap closure area
-gap_clo_NP_91721 <- merge(x = gap_clo_NP_91721, y = stats_aspect[ , c("gap_id","aspect", "pa_ratio", "timestep")], by = c("gap_id", "timestep"), all.x=TRUE)
+gap_clo_NP_91721 <- merge(x = gap_clo_NP_91721, y = stats_aspect[ , c("gap_id","aspect", "timestep")], by = c("gap_id", "timestep"), all.x=TRUE)
 gap_clo_NP_91721 <- merge(x = gap_clo_NP_91721, y = stats_ftype[ , c("gap_id","forest_type", "timestep")], by = c("gap_id", "timestep"), all.x=TRUE)
 gap_clo_NP_91721 <- merge(x = gap_clo_NP_91721, y = stats_elevation[ , c("gap_id","elevation", "timestep")], by = c("gap_id", "timestep"), all.x=TRUE)
-
-# exclude gaps in elevation band above 1800 m
-gap_clo_NP_91721 <- gap_clo_NP_91721[gap_clo_NP_91721$elevation != "1800-2000",]
-
-#saveRDS(gap_clo_NP_91721, "processed/closure/updated/gap_closure_elevation.rds")
 
 
 # calculate annual closure rates
@@ -283,12 +283,16 @@ gap_clo_NP_91721<- gap_clo_NP_91721 %>% mutate(time = as.numeric(recode(timestep
                                                clo_area_sum_annual = round(closure_area_sum/time,4),
                                                clo_area_annual = round(closure_area/time,4))
 
+saveRDS(gap_clo_NP_91721, "processed/closure/gap_closure_elevation.rds") # store df to contrast gap formation and closure
+
 
 # ---- relabel Larch-Swiss stone pine and Dwarf mountain pine to one forest type class ---
 
 gap_clo_NP_91721 <- gap_clo_NP_91721 %>% mutate(forest_type = as.factor(recode(forest_type,
-                                                                               `Larch-Swiss stone pine`= "Larch-Pine",
-                                                                               `Dwarf mountain pine`= "Larch-Pine")))
+                                                                               `1`= "Beech",
+                                                                               `2`= "Spruce-fir-beech",
+                                                                               `4`= "Spruce",
+                                                                               `5`= "Larch-Pine")))
 
 #label ordering
 gap_clo_NP_91721$forest_type <- ordered(gap_clo_NP_91721$forest_type, levels = c("Beech", "Spruce-fir-beech","Spruce","Larch-Pine"))
@@ -329,14 +333,14 @@ for(i in id) {
   aspect <- unique(sub$aspect)
   ftype <- unique(sub$forest_type)
   elev <- unique(sub$elevation)
-  k <- c(i,"lateral + vertical", size, aspect, ftype, elev, sum(sub$clo_share_annual))
+  k <- c(i,"Total", size, aspect, ftype, elev, sum(sub$clo_share_annual))
   gap_clo <- rbind(gap_clo, k)
   gap_clo$clo_share_annual <- as.numeric(gap_clo$clo_share_annual)
   gap_clo$id <- as.numeric(gap_clo$id)
 }
 
 gap_clo$closure_mechanism <- as.factor(gap_clo$closure_mechanism)
-gap_clo$closure_mechanism <-  ordered(gap_clo$closure_mechanism, levels = c("lateral closure" , "vertical closure", "lateral + vertical"))  
+gap_clo$closure_mechanism <-  ordered(gap_clo$closure_mechanism, levels = c("lateral closure" , "vertical closure", "Total"))  
 gap_clo$gap.size <- as.factor(gap_clo$gap.size)
 gap_clo$aspect <- as.factor(gap_clo$aspect)
 gap_clo$forest_type <- as.factor(gap_clo$forest_type)
@@ -348,7 +352,7 @@ gap_clo$forest_type <- factor(gap_clo$forest_type,levels=rev(levels(gap_clo$fore
 
 gap_clo$gap.size <- ordered(gap_clo$gap.size, levels = c("0.04-0.1", "0.1-0.2",  "0.2-0.3",  "0.3-0.4",  "0.4-0.5",  "0.5-0.6",  "0.6-0.7",  "0.7-0.8",  "0.8-0.9",  "0.9-1", ">1" ))
 
-saveRDS(gap_clo, "processed/closure/updated/clo_analysis_ready.rds")
+saveRDS(gap_clo, "processed/closure/clo_analysis_ready.2.rds")
 
 
 
@@ -381,7 +385,7 @@ average_closures_share <- gap_clo %>%
   group_by(forest_type, closure_mechanism) %>%
   summarise(avg_share_closures = mean(clo_share_annual)) %>%
   pivot_wider(names_from = closure_mechanism, values_from = avg_share_closures) %>%
-  mutate(share_lateral_on_total = `lateral closure`/`lateral + vertical`)
+  mutate(share_lateral_on_total = `lateral closure`/`Total`)
 
 
 # for Bechtesgaden core zone mean closure shares
@@ -391,6 +395,22 @@ average_closures_share <- gap_clo %>%
 # 2 Larch-Pine                   0.691               2.71                 3.40                  0.203
 # 3 Spruce                       0.820               2.97                 3.77                  0.218
 # 4 Spruce-fir-beech             1.00                3.75                 4.73                  0.212
+
+# forest_type      `lateral closure` `vertical closure` Total share_lateral_on_total  --- new/updated
+
+# 1 Larch-Pine                   0.690               2.70  3.39                  0.204
+# 2 Spruce                       0.822               2.97  3.78                  0.218
+# 3 Spruce-fir-beech             1.00                3.76  4.74                  0.211
+# 4 Beech                        1.23                4.50  5.74                  0.215
+
+# --- distribution of closure shares across forest types
+
+closure_ftype_summary <- gap_clo %>%
+  group_by(forest_type, closure_mechanism) %>%
+  summarise(mean = mean(clo_share_annual),
+            median = median(clo_share_annual),
+            q5 = quantile(clo_share_annual, 0.05),
+            q95 = quantile(clo_share_annual, 0.95))
 
 
 
@@ -411,7 +431,7 @@ My_Theme = theme(
 
 forest_data <- select(gap_clo, -aspect) # Drop the "aspect" column
 forest_data$closure_mechanism <- gsub("^(\\w)", "\\U\\1", forest_data$closure_mechanism, perl = TRUE) # change labels (capital letter first)
-forest_data$closure_mechanism <- ordered(forest_data$closure_mechanism, levels = c("Lateral closure", "Vertical closure","Lateral + vertical")) # put labels into right order
+forest_data$closure_mechanism <- ordered(forest_data$closure_mechanism, levels = c("Lateral closure", "Vertical closure","Total")) # put labels into right order
 
 new_df <- forest_data %>% 
   gather(category, feature, gap.size:elevation)
@@ -503,7 +523,7 @@ new_df$feature <-  ordered(new_df$feature, levels = c("0.04-0.1", "0.1-0.2",  "0
 tiff("gap_closure_mechanism_panel_box_v2.tiff", units="in", width=12, height=8, res=300)
 ggplot(new_df, aes(x=feature , y=clo_share_annual, fill=closure_mechanism)) +
   geom_boxplot(position=position_dodge(width=0.9)) +
-  theme_minimal()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
+  theme_minimal()  +  scale_fill_brewer(palette="Dark2", name = "Closure mechanism") + My_Theme +
   labs(x = "", y= "% of gap area closing annually", colour= "closure mechanism") +
   facet_grid(~category, scales="free_x", labeller = labeller(category = c("gap.size" = "Gap Size [ha]", "forest_type" = "Forest Type")))
 dev.off()
@@ -528,7 +548,7 @@ My_Theme = theme(
 #  --- closure share per gap size 
 
 tiff("gap_closure_gap.size_box.tiff", units="in", width=12, height=8, res=300)
-ggplot(subset(gap_clo, closure_mechanism %in% "lateral + vertical"), aes(x=gap.size , y=clo_share_annual, fill="green")) +
+ggplot(subset(gap_clo, closure_mechanism %in% "Total"), aes(x=gap.size , y=clo_share_annual, fill="green")) +
   geom_boxplot(position=position_dodge(width=0.9)) +
   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
   labs(x = "gap size [ha]", y= "% of gap area closing annually", colour= "closure mechanism")+ guides(fill = FALSE)  
@@ -558,7 +578,7 @@ tiff("gap_closure_elevation.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap_clo, aes(x=clo_share_annual , y=elevation, fill= closure_mechanism)) + geom_boxplot() +
   theme_minimal()+ coord_flip()  + My_Theme +
   scale_fill_brewer(palette="Dark2", name = "closure mechanism")+
-  labs(x = "% of gap area closing annually", y= "Aspect")
+  labs(x = "% of gap area closing annually", y= "Elevation")
 dev.off()
 
 
@@ -576,7 +596,7 @@ ggplot(gap_clo, aes(x=forest_type , y=clo_share_annual, fill=closure_mechanism))
 dev.off()
 
 tiff("gap_closure_ftype_box.tiff", units="in", width=12, height=8, res=300)
-ggplot(subset(gap_clo, closure_mechanism %in% "lateral + vertical"), aes(x=forest_type , y=clo_share_annual, fill="green")) +
+ggplot(subset(gap_clo, closure_mechanism %in% "Total"), aes(x=forest_type , y=clo_share_annual, fill="green")) +
   geom_boxplot() +
   theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
   labs(x = "forest type", y= "% of gap area closing annually", colour= "closure mechanism")+ guides(fill = FALSE)   
