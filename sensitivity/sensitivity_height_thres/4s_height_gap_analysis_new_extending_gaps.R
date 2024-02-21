@@ -222,7 +222,6 @@ gap_features_917$year <- as.factor("9-17")
 
 gap_features921_h5 <- rbind(gap_features_917, gap_features_1721)
 gap_features921_h5 <- subset(gap_features921_h5, new.exp %in% c("new", "expanding")) #exclude stable gaps for the analysis
-gap_features921_h5 <- gap_features921_h5[gap_features921_h5$elevation != "1800-2000",]
 
 gap_features921_h5 <- gap_features921_h5[gap_features921_h5$area.ha >= 0.04,] #delete gaps smaller than 400m2, as they emerged out of the cropping of the reserach area
 gap_features921_h5$h_thres <- as.factor("5")
