@@ -88,7 +88,7 @@ terra::writeRaster(gap_closure_mechanism1721, "processed/sensitivity/mmu400_heig
 ###################################################################################################################
 
 #merge closure mechanism with gaps
-gap_closure_mechanism917 <- rast( "processed/sensitivity/mmu400_height5/gap_closure_mechanism917_new.tif")
+gap_closure_mechanism917 <- rast( "processed/sensitivity/mmu400_height5/gap_closure_mechanism917.tif")
 
 gaps2009 <- crop(gaps2009, gap_closure_mechanism917)
 gap_closure_mechanism_stack <- c(gap_closure_mechanism917, gaps2009)
@@ -160,7 +160,7 @@ gap_clo_per_id_nona_917<-gap_clo_per_id_nona %>%
 ###################################################################################################################
 
 # #merge closure mechanism with gaps
-gap_closure_mechanism1721 <- rast("processed/sensitivity/gap_closure_mechanism1721_new.tif")
+gap_closure_mechanism1721 <- rast("processed/sensitivity/mmu400_height5/gap_closure_mechanism1721.tif")
 
 gaps2017 <- crop(gaps2017, gap_closure_mechanism1721)
 gap_closure_mechanism_stack_1721 <- c(gap_closure_mechanism1721, gaps2017)
@@ -250,15 +250,12 @@ gap_clo_NP_91721<- gap_clo_NP_91721 %>% mutate(time = as.numeric(recode(timestep
 
 
 
-# --- append lateral + vertical closure info to main df for distribution display ---- (or total)
+# --- append Total closure info to main df for distribution display 
 gap_clo_NP_91721$id <- as.numeric(paste0(gap_clo_NP_91721$gap_id,gap_clo_NP_91721$time))
 
-gap_clo <- as.data.frame(gap_clo_NP_91721[,c("id", "closure_mechanism",  "gap.size","aspect", "forest_type", "elevation", "clo_share_annual") ])
+gap_clo <- as.data.frame(gap_clo_NP_91721[,c("id", "closure_mechanism",  "gap.size", "clo_share_annual") ])
 gap_clo$closure_mechanism <- as.character(gap_clo$closure_mechanism)
 gap_clo$gap.size <- as.character(gap_clo$gap.size)
-gap_clo$aspect <- as.character(gap_clo$aspect)
-gap_clo$forest_type <- as.character(gap_clo$forest_type)
-gap_clo$elevation <- as.character(gap_clo$elevation)
 
 id <- as.character(unique(gap_clo$id))
 
@@ -268,18 +265,16 @@ for(i in id) {
   aspect <- unique(sub$aspect)
   ftype <- unique(sub$forest_type)
   elev <- unique(sub$elevation)
-  k <- c(i,"lateral + vertical", size, aspect, ftype, elev, sum(sub$clo_share_annual))
+  k <- c(i,"Total", size,sum(sub$clo_share_annual))
   gap_clo <- rbind(gap_clo, k)
   gap_clo$clo_share_annual <- as.numeric(gap_clo$clo_share_annual)
   gap_clo$id <- as.numeric(gap_clo$id)
 }
 
 gap_clo$closure_mechanism <- as.factor(gap_clo$closure_mechanism)
-gap_clo$closure_mechanism <-  ordered(gap_clo$closure_mechanism, levels = c("lateral closure" , "vertical closure", "lateral + vertical"))  
+gap_clo$closure_mechanism <-  ordered(gap_clo$closure_mechanism, levels = c("lateral closure" , "vertical closure", "Total"))  
 gap_clo$gap.size <- as.factor(gap_clo$gap.size)
-gap_clo$aspect <- as.factor(gap_clo$aspect)
-gap_clo$forest_type <- as.factor(gap_clo$forest_type)
-gap_clo$elevation <- as.factor(gap_clo$elevation)
+
 
 #order labels
 gap_clo$gap.size <- ordered(gap_clo$gap.size, levels = c("0.04-0.1", "0.1-0.2",  "0.2-0.3",  "0.3-0.4",  "0.4-0.5",  "0.5-0.6",  "0.6-0.7",  "0.7-0.8",  "0.8-0.9",  "0.9-1", ">1" ))
