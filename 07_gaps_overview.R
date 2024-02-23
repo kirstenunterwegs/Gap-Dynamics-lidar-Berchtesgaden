@@ -65,7 +65,10 @@ gathered_df <- gap.stack.df %>%
   filter(!is.nan(gap_id))# Remove rows where gap_id is NaN
 
 # overall gap area
-sum(gathered_df$n / 10000) # 2730.522 ha
+
+gathered_df %>% group_by(year)%>%
+  summarise(total_gap_area_ha = round(sum(n)/10000,2))
+
 
 # Count the occurrences of each value in each column
 gap_counts <- gathered_df %>%
