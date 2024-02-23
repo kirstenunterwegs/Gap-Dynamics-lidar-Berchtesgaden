@@ -140,7 +140,6 @@ area_share_class %>%
 
 area_share_class <- readRDS("processed/environment_features/area_share_per_class_studyarea.rds")
 
-
 #--- prepare df for area share plotting
 
 

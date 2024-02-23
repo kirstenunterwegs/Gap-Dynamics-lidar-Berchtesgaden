@@ -1,9 +1,7 @@
 library(dplyr)
 library(tidyr)
-library(terra)
-library(ggplot2)
-library(RColorBrewer)
-library(wesanderson)
+
+
 
 wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
 setwd(wd)
@@ -11,9 +9,8 @@ setwd(wd)
 # load data
 area_share_class <- readRDS("processed/environment_features/area_share_per_class_studyarea.rds")
 creation <- readRDS("processed/creation/gap_creation_elevation.rds")
-
 closure <- readRDS("processed/closure/gap_closure_elevation.rds")
-closure <- readRDS("processed/closure/gap_closure_elevation2.rds")
+
 
 #--- process data for comparison
 
@@ -67,9 +64,6 @@ sum_creation_closure <- creation.closure.scaled %>%
          creation.ha.yr = creation*area.scaling.factor/12,
          closure.ha.yr = closure*area.scaling.factor/12)
 
-
-# creation  closure area.scaling.factor obs.years creation.ha.yr closure.ha.yr - old
-# 278.7181  351.4934        0.02500625        12      0.5808079      0.732461
 
 # creation  closure area.scaling.factor obs.years creation.ha.yr closure.ha.yr
 # 278.7181 357.3844          0.02500625        12      0.5808079      0.744737
