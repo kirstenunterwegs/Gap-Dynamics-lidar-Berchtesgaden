@@ -69,7 +69,7 @@ names(gap_closure_mechanism_stack.df) <- c("closure_mechanism", "gap_id")
 
 # # save data frame in case RAM runs full
 # saveRDS(gap_closure_mechanism_stack.df,"processed/closure/gap_closure_mechanism_pergap_917.rds" )
-# gap_closure_mechanism_stack.df <- readRDS("processed/closure/gap_closure_mechanism_pergap_917.rds")
+ gap_closure_mechanism_stack.df <- readRDS("processed/closure/gap_closure_mechanism_pergap_917.rds")
 
 # aggregate closure and gap information 
 
@@ -164,7 +164,7 @@ names(gap_closure_mechanism_stack.df_1721) <- c("closure_mechanism", "gap_id")
 
 # # save data frame in case RAM runs full
 # saveRDS(gap_closure_mechanism_stack.df_1721,"processed/closure/gap_closure_mechanism_pergap_1721.rds" )
- gap_closure_mechanism_stack.df_1721 <- readRDS("processed/closure/gap_closure_mechanism_pergap_1721_2.rds" )
+ gap_closure_mechanism_stack.df_1721 <- readRDS("processed/closure/gap_closure_mechanism_pergap_1721.rds" )
 
 
 # aggregate closure and gap information 
@@ -292,10 +292,10 @@ gap_clo_NP_91721 <- gap_clo_NP_91721 %>% mutate(forest_type = as.factor(recode(f
                                                                                `1`= "Beech",
                                                                                `2`= "Spruce-fir-beech",
                                                                                `4`= "Spruce",
-                                                                               `5`= "Larch-Pine")))
+                                                                               `5`= "Larch-pine")))
 
 #label ordering
-gap_clo_NP_91721$forest_type <- ordered(gap_clo_NP_91721$forest_type, levels = c("Beech", "Spruce-fir-beech","Spruce","Larch-Pine"))
+gap_clo_NP_91721$forest_type <- ordered(gap_clo_NP_91721$forest_type, levels = c("Beech", "Spruce-fir-beech","Spruce","Larch-pine"))
 gap_clo_NP_91721$forest_type <- factor(gap_clo_NP_91721$forest_type,levels=rev(levels(gap_clo_NP_91721$forest_type)))
 
 
@@ -307,10 +307,11 @@ lateral_share_per_forest_type <- gap_clo_NP_91721 %>%
             share_lateral_closure = round(sum_lateral_closure_area / (sum_lateral_closure_area + sum_vertical_closure_area),2))
 
 # forest_type      sum_lateral_closure_area sum_vertical_closure_area share_lateral_closure
-# 1 Larch-Pine                          33.8                      132.                   0.2 
-# 2 Spruce                              25.3                      91.2                  0.22
-# 3 Spruce-fir-beech                    11.1                      44.6                  0.2 
-# 4 Beech                               2.77                      11.0                  0.2 
+
+# 1 Larch-pine                          36.0                      139.                   0.21
+# 2 Spruce                              24.7                       87.9                  0.22
+# 3 Spruce-fir-beech                    11.2                       45.3                  0.2 
+# 4 Beech                                2.78                      10.9                  0.2 
 
 
 
@@ -347,12 +348,12 @@ gap_clo$forest_type <- as.factor(gap_clo$forest_type)
 gap_clo$elevation <- as.factor(gap_clo$elevation)
 
 # order labels for plotting
-gap_clo$forest_type <- ordered(gap_clo$forest_type, levels = c("Beech", "Spruce-fir-beech","Spruce","Larch-Pine"))
+gap_clo$forest_type <- ordered(gap_clo$forest_type, levels = c("Beech", "Spruce-fir-beech","Spruce","Larch-pine"))
 gap_clo$forest_type <- factor(gap_clo$forest_type,levels=rev(levels(gap_clo$forest_type)))
 
 gap_clo$gap.size <- ordered(gap_clo$gap.size, levels = c("0.04-0.1", "0.1-0.2",  "0.2-0.3",  "0.3-0.4",  "0.4-0.5",  "0.5-0.6",  "0.6-0.7",  "0.7-0.8",  "0.8-0.9",  "0.9-1", ">1" ))
 
-saveRDS(gap_clo, "processed/closure/clo_analysis_ready.2.rds")
+saveRDS(gap_clo, "processed/closure/clo_analysis_ready.rds")
 
 
 
@@ -374,10 +375,8 @@ My_Theme = theme(
   strip.text.y = element_text(size = 16),
   legend.position="top") #bottom
 
-require(scales)
 
-
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/gap_closure"
+wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/results/gap_closure/"
 setwd(wd)
 
 #  ---Calculate the average share of clo_share_annual for lateral closure and vertical closure in Beech forest
