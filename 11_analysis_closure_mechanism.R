@@ -388,12 +388,6 @@ average_closures_share <- gap_clo %>%
 
 
 # for Bechtesgaden core zone mean closure shares
-# forest_type      `lateral closure` `vertical closure` `lateral + vertical` share_lateral_on_total
-
-# 1 Beech                        1.24                4.57                 5.81                  0.213
-# 2 Larch-Pine                   0.691               2.71                 3.40                  0.203
-# 3 Spruce                       0.820               2.97                 3.77                  0.218
-# 4 Spruce-fir-beech             1.00                3.75                 4.73                  0.212
 
 # forest_type      `lateral closure` `vertical closure` Total share_lateral_on_total  --- new/updated
 
@@ -408,9 +402,15 @@ closure_ftype_summary <- gap_clo %>%
   group_by(forest_type, closure_mechanism) %>%
   summarise(mean = mean(clo_share_annual),
             median = median(clo_share_annual),
-            q5 = quantile(clo_share_annual, 0.05),
-            q95 = quantile(clo_share_annual, 0.95))
+            q2.5 = quantile(clo_share_annual, 0.025),
+            q97.5 = quantile(clo_share_annual, 0.975))
 
+gap_clo %>%
+  group_by(closure_mechanism) %>%
+  summarise(mean = mean(clo_share_annual),
+            median = median(clo_share_annual),
+            q2.5 = quantile(clo_share_annual, 0.025),
+            q97.5 = quantile(clo_share_annual, 0.975))
 
 
 #--- create panel view plot with closure per environmental feature ------
