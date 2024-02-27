@@ -301,14 +301,14 @@ for(i in id) {
   aspect <- unique(sub$aspect)
   ftype <- unique(sub$forest_type)
   elev <- unique(sub$elevation)
-  k <- c(i,"Total", size, sum(sub$clo_share_annual))
+  k <- c(i,"total", size, sum(sub$clo_share_annual))
   gap_clo <- rbind(gap_clo, k)
   gap_clo$clo_share_annual <- as.numeric(gap_clo$clo_share_annual)
   gap_clo$id <- as.numeric(gap_clo$id)
 }
 
 gap_clo$closure_mechanism <- as.factor(gap_clo$closure_mechanism)
-gap_clo$closure_mechanism <-  ordered(gap_clo$closure_mechanism, levels = c("lateral closure" , "vertical closure", "Total"))  
+gap_clo$closure_mechanism <-  ordered(gap_clo$closure_mechanism, levels = c("lateral closure" , "vertical closure", "total"))  
 gap_clo$gap.size <- as.factor(gap_clo$gap.size)
 
 #order labels
@@ -493,14 +493,14 @@ for(i in id) {
   aspect <- unique(sub$aspect)
   ftype <- unique(sub$forest_type)
   elev <- unique(sub$elevation)
-  k <- c(i,"Total", size, sum(sub$clo_share_annual))
+  k <- c(i,"total", size, sum(sub$clo_share_annual))
   gap_clo <- rbind(gap_clo, k)
   gap_clo$clo_share_annual <- as.numeric(gap_clo$clo_share_annual)
   gap_clo$id <- as.numeric(gap_clo$id)
 }
 
 gap_clo$closure_mechanism <- as.factor(gap_clo$closure_mechanism)
-gap_clo$closure_mechanism <-  ordered(gap_clo$closure_mechanism, levels = c("lateral closure" , "vertical closure", "Total"))  
+gap_clo$closure_mechanism <-  ordered(gap_clo$closure_mechanism, levels = c("lateral closure" , "vertical closure", "total"))  
 gap_clo$gap.size <- as.factor(gap_clo$gap.size)
 
 #order labels
@@ -529,7 +529,7 @@ gap_clo<- rbind(gap_clo_low, gap_clo_original, gap_clo_high)
 
 # prepare plotting
 
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/sensitivity_analysis/height_growth_thres/"
+wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/results/sensitivity_analysis/height_growth_thres/"
 setwd(wd)
 
 
