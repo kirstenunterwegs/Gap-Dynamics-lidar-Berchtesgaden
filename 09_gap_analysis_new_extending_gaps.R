@@ -278,6 +278,11 @@ summary_exp_new <- gap_features921 %>%
             num_observations = n())%>%
   mutate(share_expanding_gaps = (total_exp_area / sum(total_exp_area)) * 100)
 
+summary_exp_new_time <- gap_features921 %>%
+  group_by(new.exp,year) %>%
+  summarise(total_exp_area = sum(exp.area.ha),
+            avg_exp_area = mean(exp.area.ha),
+            num_observations = n())
 
 # ---- distance calculation between new and existing gaps ----
 
@@ -578,7 +583,9 @@ gap.creation.elevation<- gap_features921 %>% group_by(new.exp, year, elevation) 
          sd = sd(gap.creation.annual),
          median = round(median(gap.creation.annual),2),
          q5 = quantile(gap.creation.annual, 0.05),
-         q95 = quantile(gap.creation.annual, 0.95))
+         q95 = quantile(gap.creation.annual, 0.95),
+         q2.5 = quantile(gap.creation.annual, 0.025),
+         q97.5 = quantile(gap.creation.annual, 0.975))
 
 gap.creation.elevation$elevation <- ordered(gap.creation.elevation$elevation, levels = c("1600-1800", "1400-1600","1200-1400","1000-1200", "800-1000",  "600-800" ))
 gap.creation.elevation$elevation <- factor(gap.creation.elevation$elevation,levels=rev(levels(gap.creation.elevation$elevation)))
@@ -765,4 +772,142 @@ ggplot(forest_gap, aes(x=forest_type , y=median_ascaled, fill=new.exp)) +
                   position = position_dodge(width=0.7), linewidth = 1.5)
 dev.off()
 
+
+# --- Supporting information ---
+
+My_Theme = theme(
+  title = element_text(size = 18),
+  axis.title.x = element_text(size = 28),
+  axis.text.x = element_text(size = 24,angle = 45, hjust=1),
+  axis.text.y = element_text(size = 24),
+  axis.title.y = element_text(size = 28),
+  legend.key.height = unit(1, 'cm'),
+  legend.title = element_text(size=24),
+  legend.text = element_text(size=23),
+  strip.text.x = element_text(size = 20),
+  panel.spacing = unit(2, "lines"),
+  legend.position = "top")
+
+# --- aspect
+
+
+gap.creation.aspect<- gap_features921 %>% group_by(new.exp, year, aspect) %>%
+  summarize(gap.creation.ha = sum(exp.area.ha),
+            n.gaps = length(unique(gap.id)),
+            ha.per.gap = round(gap.creation.ha / n.gaps, 3)) %>%
+  mutate(time = recode(year,
+                       `9-17`=8,
+                       `17-21`=4),
+         gap.creation.annual = round(gap.creation.ha/time,2)) %>%
+  group_by(new.exp, aspect)%>%
+  mutate(avg.gap.creation.annual = round(mean(gap.creation.annual),2),
+         sd = sd(gap.creation.annual),
+         median = round(median(gap.creation.annual),2),
+         q2.5 = quantile(gap.creation.annual, 0.025),
+         q97.5 = quantile(gap.creation.annual, 0.975))
+
+# area scaling 
+
+gap.creation.aspect.scaled <- gap.creation.aspect[,c("new.exp", "aspect", "median", "q2.5","q97.5" )]
+gap.creation.aspect.scaled <- gap.creation.aspect.scaled[!duplicated(gap.creation.aspect.scaled), ]
+
+#merge with area share information
+gap.creation.aspect.scaled <- merge(gap.creation.aspect.scaled, area_share_class[,c("class.name", "class_area_perc", "total_area", "total_area_category" )],
+                                    by.x = "aspect", by.y = "class.name", all.x = TRUE)
+
+#scale annual gap creation by area share of subcategory to 100 ha
+gap.creation.aspect.scaled$area.scaling.factor <- 100/gap.creation.aspect.scaled$total_area
+
+
+gap.creation.aspect.scaled$median_ascaled <- round(gap.creation.aspect.scaled$median * gap.creation.aspect.scaled$area.scaling.factor,2)
+gap.creation.aspect.scaled$q2.5_ascaled <- round(gap.creation.aspect.scaled$q2.5 * gap.creation.aspect.scaled$area.scaling.factor,2)
+gap.creation.aspect.scaled$q97.5_ascaled <- round(gap.creation.aspect.scaled$q97.5 * gap.creation.aspect.scaled$area.scaling.factor,2)
+
+aspect_gap <- as.data.frame(gap.creation.aspect.scaled)
+aspect_gap <- aspect_gap[,c("aspect", "new.exp", "median_ascaled","q2.5_ascaled", "q97.5_ascaled") ]
+
+
+aspect <- as.character(unique(aspect_gap$aspect))
+aspect_gap$new.exp <- as.character(aspect_gap$new.exp)
+
+for(i in aspect) {
+  sub <- subset(aspect_gap, aspect %in% i)
+  k <- c(i, "Total", sum(sub$median_ascaled), sum(sub$q2.5_ascaled), sum(sub$q97.5_ascaled))
+  aspect_gap <- rbind(aspect_gap, k)
+  aspect_gap$median_ascaled <- as.numeric(aspect_gap$median_ascaled)
+  aspect_gap$q2.5_ascaled <- as.numeric(aspect_gap$q2.5_ascaled)
+  aspect_gap$q97.5_ascaled <- as.numeric(aspect_gap$q97.5_ascaled)
+}
+
+aspect_gap$new.exp <- as.factor(aspect_gap$new.exp)
+
+
+
+aspect_gap$new.exp <- ordered(aspect_gap$new.exp, levels = c("New", "Expanding","Total"))
+
+
+tiff("area_new_exp_aspect_95th.tiff", units="in", width=12, height=8, res=300)
+ggplot(aspect_gap, aes(x=aspect , y=median_ascaled, colour= new.exp, group= new.exp, fill=new.exp)) + 
+  geom_point(aes(colour= new.exp), shape = 21, size = 8, position=position_dodge(width=0.7)) +
+  theme_minimal()+ coord_flip()  +
+  scale_color_manual(values = c("#E69F00", "grey40", "#56B4E9"), name = "Formation mechanism")+
+  scale_fill_manual(values = c("#E69F00", "grey40", "#56B4E9"), name = "Formation mechanism")+
+  My_Theme +
+  labs(x = "Aspect", y= expression("Rate of gap formation (" * ha * " " * 100 * ha^-1 * " " * year^-1 * ")"), fill= "Formation mechanism")+ 
+  geom_pointrange(aes(ymin=q2.5_ascaled, ymax=q97.5_ascaled, colour = new.exp), 
+                  position = position_dodge(width=0.7), linewidth = 1.5)
+dev.off()
+
+
+
+# --- elevation
+
+
+# area -scaling
+
+gap.creation.elevation.scaled <- gap.creation.elevation[,c("new.exp", "elevation", "median", "q2.5", "q97.5")]
+gap.creation.elevation.scaled <- gap.creation.elevation.scaled[!duplicated(gap.creation.elevation.scaled), ]
+
+#merge with area share information
+gap.creation.elevation.scaled <- merge(gap.creation.elevation.scaled, area_share_class[,c("class.name", "class_area_perc", "total_area", "total_area_category" )],
+                                       by.x = "elevation", by.y = "class.name", all.x = TRUE)
+
+#scale annual gap creation by area share of subcategory to 100 ha
+gap.creation.elevation.scaled$area.scaling.factor <- 100/gap.creation.elevation.scaled$total_area
+
+gap.creation.elevation.scaled$median_ascaled <- round(gap.creation.elevation.scaled$median * gap.creation.elevation.scaled$area.scaling.factor,2)
+gap.creation.elevation.scaled$q2.5_ascaled <- round(gap.creation.elevation.scaled$q2.5 * gap.creation.elevation.scaled$area.scaling.factor,2)
+gap.creation.elevation.scaled$q97.5_ascaled <- round(gap.creation.elevation.scaled$q97.5 * gap.creation.elevation.scaled$area.scaling.factor,2)
+
+elevation_gap <- as.data.frame(gap.creation.elevation.scaled)
+elevation_gap <- elevation_gap[,c("elevation", "new.exp",  "median_ascaled","q2.5_ascaled", "q97.5_ascaled") ]
+
+elev <- as.character(unique(elevation_gap$elevation))
+elevation_gap$new.exp <- as.character(elevation_gap$new.exp)
+
+for(i in elev) {
+  sub <- subset(elevation_gap, elevation %in% i)
+  k <- c(i, "Total", sum(sub$median_ascaled), sum(sub$q2.5_ascaled), sum(sub$q97.5_ascaled))
+  elevation_gap <- rbind(elevation_gap, k)
+  elevation_gap$median_ascaled <- as.numeric(elevation_gap$median_ascaled)
+  elevation_gap$q2.5_ascaled <- as.numeric(elevation_gap$q2.5_ascaled)
+  elevation_gap$q97.5_ascaled <- as.numeric(elevation_gap$q97.5_ascaled)
+}
+
+elevation_gap$new.exp <- as.factor(elevation_gap$new.exp)
+
+elevation_gap$new.exp <- ordered(elevation_gap$new.exp, levels = c("New", "Expanding","Total"))
+
+
+tiff("area_new_exp_elevation_95th.tiff", units="in", width=12, height=8, res=300)
+ggplot(elevation_gap, aes(x=elevation , y=median_ascaled, colour= new.exp, group= new.exp, fill=new.exp)) + 
+  geom_point(aes(colour= new.exp), shape = 21, size = 8, position=position_dodge(width=0.7)) +
+  theme_minimal()+ coord_flip()  +
+  scale_color_manual(values = c("#E69F00", "grey40", "#56B4E9"), name = "Formation mechanism")+
+  scale_fill_manual(values = c("#E69F00", "grey40", "#56B4E9"), name = "Formation mechanism")+
+  My_Theme +
+  labs(x = "Elevation", y= expression("Rate of gap formation (" * ha * " " * 100 * ha^-1 * " " * year^-1 * ")"), fill= "Formation mechanism")+ 
+  geom_pointrange(aes(ymin=q2.5_ascaled, ymax=q97.5_ascaled, colour = new.exp), 
+                  position = position_dodge(width=0.7), linewidth = 1.5)
+dev.off()
 
