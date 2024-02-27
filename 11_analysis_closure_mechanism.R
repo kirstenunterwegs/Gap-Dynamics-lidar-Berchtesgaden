@@ -9,7 +9,6 @@
 library(dplyr)
 library(tidyr)
 library(terra)
-library(lidR)
 library(ggplot2)
 library(RColorBrewer)
 
@@ -298,6 +297,14 @@ gap_clo_NP_91721 <- gap_clo_NP_91721 %>% mutate(forest_type = as.factor(recode(f
 gap_clo_NP_91721$forest_type <- ordered(gap_clo_NP_91721$forest_type, levels = c("Beech", "Spruce-fir-beech","Spruce","Larch-pine"))
 gap_clo_NP_91721$forest_type <- factor(gap_clo_NP_91721$forest_type,levels=rev(levels(gap_clo_NP_91721$forest_type)))
 
+# Gap closure area summary
+gap_clo_NP_91721 %>%
+  summarise(sum_closure_area = sum(closure_area/10000),
+            avg_clo_area_annual = mean(clo_area_sum_annual),
+            sum_lateral_closure_area = sum(closure_area[closure_mechanism == "lateral closure"]/10000),
+            sum_vertical_closure_area = sum(closure_area[closure_mechanism == "vertical closure"])/10000,
+            share_lateral_closure = round(sum_lateral_closure_area / (sum_lateral_closure_area + sum_vertical_closure_area),2))
+
 
 # Calculate the share of lateral closure on the sum of lateral and vertical closure per forest_type
 lateral_share_per_forest_type <- gap_clo_NP_91721 %>%
@@ -437,7 +444,7 @@ new_df <- forest_data %>%
 
 
 new_df$feature <-  ordered(new_df$feature, levels = c("0.04-0.1", "0.1-0.2",  "0.2-0.3",  "0.3-0.4",  "0.4-0.5",  "0.5-0.6",  "0.6-0.7",  "0.7-0.8",  "0.8-0.9",  "0.9-1", ">1",
-                                                      "Beech", "Spruce-fir-beech","Spruce","Larch-Pine",
+                                                      "Beech", "Spruce-fir-beech","Spruce","Larch-pine",
                                                       "600-800", "800-1000","1000-1200","1200-1400", "1400-1600",  "1600-1800" ))
 
 # Create a data frame for facet labels
@@ -447,7 +454,7 @@ facet_labels <- data.frame(category = unique(new_df$category),
 # Merge facet labels with the main data frame
 new_df <- merge(new_df, facet_labels, by = "category")
 
-tiff("gap_closure_mechanism_panel_box.tiff", units="in", width=12, height=8, res=300)
+tiff("gap_closure_mechanism_panel_box.tiff", units="in", width=16, height=8, res=300)
 ggplot(new_df, aes(x = feature, y = clo_share_annual, fill = closure_mechanism)) +
   geom_boxplot(position = position_dodge(width = 0.9)) +
   theme_minimal() +
@@ -516,7 +523,7 @@ new_df <- forest_data %>%
 
 
 new_df$feature <-  ordered(new_df$feature, levels = c("0.04-0.1", "0.1-0.2",  "0.2-0.3",  "0.3-0.4",  "0.4-0.5",  "0.5-0.6",  "0.6-0.7",  "0.7-0.8",  "0.8-0.9",  "0.9-1", ">1",
-                                                      "Beech", "Spruce-fir-beech","Spruce","Larch-Pine"
+                                                      "Beech", "Spruce-fir-beech","Spruce","Larch-pine"
 ))
 
 tiff("gap_closure_mechanism_panel_box_v2.tiff", units="in", width=12, height=8, res=300)
@@ -569,36 +576,6 @@ ggplot(gap_clo, aes(x=clo_share_annual , y=aspect, fill= closure_mechanism)) + g
   theme_minimal()+ coord_flip()  + My_Theme +
   scale_fill_brewer(palette="Dark2", name = "closure mechanism")+
   labs(x = "% of gap area closing annually", y= "Aspect")
-dev.off()
-
-#  --- closure share per elevation 
-
-tiff("gap_closure_elevation.tiff", units="in", width=12, height=8, res=300)
-ggplot(gap_clo, aes(x=clo_share_annual , y=elevation, fill= closure_mechanism)) + geom_boxplot() +
-  theme_minimal()+ coord_flip()  + My_Theme +
-  scale_fill_brewer(palette="Dark2", name = "closure mechanism")+
-  labs(x = "% of gap area closing annually", y= "Elevation")
-dev.off()
-
-
-# --- closure share per forest type
-
-#order labels
-gap_clo$forest_type <- ordered(gap_clo$forest_type, levels = c("Beech", "Spruce-fir-beech","Spruce","Larch-Pine"))
-gap_clo$forest_type <- factor(gap_clo$forest_type,levels=rev(levels(gap_clo$forest_type)))
-
-tiff("gap_closure_mechanism_ftype_box.tiff", units="in", width=12, height=8, res=300)
-ggplot(gap_clo, aes(x=forest_type , y=clo_share_annual, fill=closure_mechanism)) +
-  geom_boxplot() +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "forest type", y= "% of gap area closing annually", colour= "closure mechanism")
-dev.off()
-
-tiff("gap_closure_ftype_box.tiff", units="in", width=12, height=8, res=300)
-ggplot(subset(gap_clo, closure_mechanism %in% "Total"), aes(x=forest_type , y=clo_share_annual, fill="green")) +
-  geom_boxplot() +
-  theme_minimal()+ coord_flip()  +  scale_fill_brewer(palette="Dark2", name = "closure mechanism") + My_Theme +
-  labs(x = "forest type", y= "% of gap area closing annually", colour= "closure mechanism")+ guides(fill = FALSE)   
 dev.off()
 
 
