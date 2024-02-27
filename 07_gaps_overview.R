@@ -385,9 +385,9 @@ saveRDS(stats_all_aspect, "processed/gap_features/stats_all_aspect.rds")
 # --- summary 
 
   
-stats_all_ftype <- stats_all_ftype %>% group_by(year)%>%
+gap_stats_summary <- stats_all_ftype %>% group_by(year)%>%
   summarise(n_gaps = n_distinct(gap_id),
-            gap_area_total = sum(gap_area),
-            max_gap_size = max(gap_area),
-            mean_gap_area = mean(gap_area))
+            gap_area_total = round(sum(gap_area)/10000,2),
+            max_gap_size = max(gap_area)/10000,
+            mean_gap_area = mean(gap_area)/10000)
 
