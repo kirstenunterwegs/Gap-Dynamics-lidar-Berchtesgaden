@@ -5,15 +5,11 @@
 library(dplyr)
 library(tidyr)
 library(terra)
-library(ForestGapR)
-library(ForestTools)
 
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
 
 #--- load layers ---
 
-gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu400.sensitivity.tif")
+gap_stack <- rast("data/processed/gaps_sensitivity/gap.stack.mmu400.sensitivity.tif")
 gaps2009 <- gap_stack[[1]]
 gaps2017<- gap_stack[[2]]
 gaps2021<- gap_stack[[3]]
@@ -39,15 +35,15 @@ gap_change_class <- function(gap_layer1, gap_layer2){
 exp_clo_917 <- gap_change_class(gaps2009, gaps2017)
 exp_clo_1721 <- gap_change_class(gaps2017, gaps2021)
 
-terra::writeRaster(exp_clo_917, "processed/sensitivity/mmu400_height5/exp_clo_917_cn2cr2_mmu100n8_filtered.tif")
-terra::writeRaster(exp_clo_1721, "processed/sensitivity/mmu400_height5/exp_clo_1721_cn2cr2_mmu100n8_filtered.tif")
+terra::writeRaster(exp_clo_917, "data/processed/sensitivity/mmu400_height5/exp_clo_917_cn2cr2_mmu100n8_filtered.tif")
+terra::writeRaster(exp_clo_1721, "data/processed/sensitivity/mmu400_height5/exp_clo_1721_cn2cr2_mmu100n8_filtered.tif")
 
 
 # --- extract vegeation growth in gap closure areas per time step ---
 
-chm9 <- rast("processed/gaps_sensitivity/CHM_sensitivity_area/chm9_sub_sensitivity.tif")
-chm17 <- rast("processed/gaps_sensitivity/CHM_sensitivity_area/chm17_sub_sensitivity.tif")
-chm21 <- rast("processed/gaps_sensitivity/CHM_sensitivity_area/chm21_sub_sensitivity.tif")
+chm9 <- rast("data/processed/gaps_sensitivity/CHM_sensitivity_area/chm9_sub_sensitivity.tif")
+chm17 <- rast("data/processed/gaps_sensitivity/CHM_sensitivity_area/chm17_sub_sensitivity.tif")
+chm21 <- rast("data/processed/gaps_sensitivity/CHM_sensitivity_area/chm21_sub_sensitivity.tif")
 
 # get vegetation changes
 diff917 <- chm17-chm9
@@ -65,6 +61,6 @@ clo_growth_917 <-mask(diff917, clo_917)
 diff1721 <- crop(diff1721, clo_1721)
 clo_growth_1721 <-mask(diff1721, clo_1721) 
 
-writeRaster(clo_growth_917 , "processed/sensitivity/mmu400_height5/closure_area_growth_917.tif")
-writeRaster(clo_growth_1721 , "processed/sensitivity/mmu400_height5/closure_area_growth_1721.tif")
+writeRaster(clo_growth_917 , "data/processed/sensitivity/mmu400_height5/closure_area_growth_917.tif")
+writeRaster(clo_growth_1721 , "data/processed/sensitivity/mmu400_height5/closure_area_growth_1721.tif")
 

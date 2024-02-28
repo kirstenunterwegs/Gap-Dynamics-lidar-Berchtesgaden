@@ -8,18 +8,16 @@ library(terra)
 library(ForestGapR)
 library(ForestTools)
 
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
 
 # --- load gap layers ----
 
-gaps2009.3 <- rast("processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
-gaps2017.3 <- rast("processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
-gaps2021.3 <- rast("processed/gaps_sensitivity/height_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
+gaps2009.3 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
+gaps2017.3 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
+gaps2021.3 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
 
-gaps2009.10 <- rast("processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
-gaps2017.10 <- rast("processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
-gaps2021.10 <- rast("processed/gaps_sensitivity/height_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
+gaps2009.10 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
+gaps2017.10 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
+gaps2021.10 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
 
 
 #--- define functions ---
@@ -48,25 +46,25 @@ gap_change_917.10 <- gap_change_class(gaps2009.10, gaps2017.10)
 gap_change_1721.10 <- gap_change_class(gaps2017.10, gaps2021.10)
 
 
-terra::writeRaster(gap_change_917.3, "processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height3_917.tif")
-terra::writeRaster(gap_change_1721.3, "processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height3_1721.tif")
+terra::writeRaster(gap_change_917.3, "data/processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height3_917.tif")
+terra::writeRaster(gap_change_1721.3, "data/processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height3_1721.tif")
 
-terra::writeRaster(gap_change_917.10, "processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height10_917.tif")
-terra::writeRaster(gap_change_1721.10, "processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height10_1721.tif")
+terra::writeRaster(gap_change_917.10, "data/processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height10_917.tif")
+terra::writeRaster(gap_change_1721.10, "data/processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height10_1721.tif")
 
 
 # --- extract vegetation growth in gap closure areas per time step ---
 
-exp_clo_917_h3 <- rast("processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height3_917.tif")
-exp_clo_1721_h3 <- rast("processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height3_1721.tif")
+exp_clo_917_h3 <- rast("data/processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height3_917.tif")
+exp_clo_1721_h3 <- rast("data/processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height3_1721.tif")
 
-exp_clo_917_h10 <- rast("processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height10_917.tif")
-exp_clo_1721_h10 <- rast("processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height10_1721.tif")
+exp_clo_917_h10 <- rast("data/processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height10_917.tif")
+exp_clo_1721_h10 <- rast("data/processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height10_1721.tif")
 
 
-chm9 <- rast("processed/gaps_sensitivity/CHM_sensitivity_area/chm9_sub_sensitivity.tif")
-chm17 <- rast("processed/gaps_sensitivity/CHM_sensitivity_area/chm17_sub_sensitivity.tif")
-chm21 <- rast("processed/gaps_sensitivity/CHM_sensitivity_area/chm21_sub_sensitivity.tif")
+chm9 <- rast("data/processed/gaps_sensitivity/CHM_sensitivity_area/chm9_sub_sensitivity.tif")
+chm17 <- rast("data/processed/gaps_sensitivity/CHM_sensitivity_area/chm17_sub_sensitivity.tif")
+chm21 <- rast("data/processed/gaps_sensitivity/CHM_sensitivity_area/chm21_sub_sensitivity.tif")
 
 # get vegetation changes
 diff917 <- chm17-chm9
@@ -99,8 +97,8 @@ diff1721_h10 <- crop(diff1721, clo_1721_h10)
 clo_growth_1721_h10 <-mask(diff1721_h10, clo_1721_h10) 
 
 
-writeRaster(clo_growth_917_h3 , "processed/sensitivity/height_sensitivity/closure_area_growth_917_h3.tif")
-writeRaster(clo_growth_1721_h3 , "processed/sensitivity/height_sensitivity/closure_area_growth_1721_h3.tif")
+writeRaster(clo_growth_917_h3 , "data/processed/sensitivity/height_sensitivity/closure_area_growth_917_h3.tif")
+writeRaster(clo_growth_1721_h3 , "data/processed/sensitivity/height_sensitivity/closure_area_growth_1721_h3.tif")
 
-writeRaster(clo_growth_917_h10 , "processed/sensitivity/height_sensitivity/closure_area_growth_917_h10.tif")
-writeRaster(clo_growth_1721_h10 , "processed/sensitivity/height_sensitivity/closure_area_growth_1721_h10.tif")
+writeRaster(clo_growth_917_h10 , "data/processed/sensitivity/height_sensitivity/closure_area_growth_917_h10.tif")
+writeRaster(clo_growth_1721_h10 , "data/processed/sensitivity/height_sensitivity/closure_area_growth_1721_h10.tif")

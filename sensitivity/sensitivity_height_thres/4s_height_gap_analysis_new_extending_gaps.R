@@ -6,25 +6,20 @@
 library(plyr)
 library(dplyr)
 library(terra)
-library(ForestGapR)
 library(ggplot2)
 require(scales)
 library(tidyverse)
-library(ggthemes)
 
-
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
 
 # --- load  Gap layers  ----
 
-gaps2009.3id <- rast("processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
-gaps2017.3id <- rast("processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
-gaps2021.3id <- rast("processed/gaps_sensitivity/height_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
+gaps2009.3id <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
+gaps2017.3id <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
+gaps2021.3id <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
 
-gaps2009.10id <- rast("processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
-gaps2017.10id <- rast("processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
-gaps2021.10id <- rast("processed/gaps_sensitivity/height_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
+gaps2009.10id <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
+gaps2017.10id <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
+gaps2021.10id <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
 
 # # crop gaps ID
 # gaps2017.id <-crop(gaps2017.id, gaps2017, snap="near",mask=TRUE) 
@@ -32,36 +27,36 @@ gaps2021.10id <- rast("processed/gaps_sensitivity/height_sensitivity/chm21_sub_s
 
 # new-expanded classification
 
-gaps2017_h3_class <- rast("processed/sensitivity/height_sensitivity/gaps2017_new_extended_stable_h3.tif")
-gaps2021_h3_class <- rast("processed/sensitivity/height_sensitivity/gaps2021_new_extended_stable_h3.tif")
+gaps2017_h3_class <- rast("data/processed/sensitivity/height_sensitivity/gaps2017_new_extended_stable_h3.tif")
+gaps2021_h3_class <- rast("data/processed/sensitivity/height_sensitivity/gaps2021_new_extended_stable_h3.tif")
 
-gaps2017_h10_class <- rast("processed/sensitivity/height_sensitivity/gaps2017_new_extended_stable_h10.tif")
-gaps2021_h10_class <- rast("processed/sensitivity/height_sensitivity/gaps2021_new_extended_stable_h10.tif")
+gaps2017_h10_class <- rast("data/processed/sensitivity/height_sensitivity/gaps2017_new_extended_stable_h10.tif")
+gaps2021_h10_class <- rast("data/processed/sensitivity/height_sensitivity/gaps2021_new_extended_stable_h10.tif")
 
 
 #load expansion and closure layer and extract only expansion areas
 
 # height thres 3m
-exp_clo917 <- rast("processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height3_917.tif")
+exp_clo917 <- rast("data/processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height3_917.tif")
 exp917_h3 <- classify(exp_clo917, cbind(1, NA)) #replace 1=closure with NA to get only expansion areas
 
-exp_clo1721 <- rast("processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height3_1721.tif")
+exp_clo1721 <- rast("data/processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height3_1721.tif")
 exp1721_h3 <- classify(exp_clo1721, cbind(1, NA)) #replace 1=closure with NA to get only expansion areas
 
 # height thres 10m
-exp_clo917 <- rast("processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height10_917.tif")
+exp_clo917 <- rast("data/processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height10_917.tif")
 exp917_h10 <- classify(exp_clo917, cbind(1, NA)) #replace 1=closure with NA to get only expansion areas
 
-exp_clo1721 <- rast("processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height10_1721.tif")
+exp_clo1721 <- rast("data/processed/sensitivity/height_sensitivity/formation_closure_mmu400n8_height10_1721.tif")
 exp1721_h10 <- classify(exp_clo1721, cbind(1, NA)) #replace 1=closure with NA to get only expansion areas
 
 
 # --- load NP information 
 
-foresttype <- rast("processed/environment_features/forest_type2020_reclass_1m.tif")
-aspect<-  rast("processed/environment_features/aspect_2021_classified_1m.tif")
-elevation.below1800 <- rast("processed/environment_features/elevation_below1800_200steps.tif")
-management <- vect("raw/npb_zonierung_22_epsg25832.shp")
+foresttype <- rast("data/processed/environment_features/forest_type2020_reclass_1m.tif")
+aspect<-  rast("data/processed/environment_features/aspect_2021_classified_1m.tif")
+elevation.below1800 <- rast("data/processed/environment_features/elevation_below1800_200steps.tif")
+management <- vect("data/raw/npb_zonierung_22_epsg25832.shp")
 # exclude management zone
 core.zone <- subset(management, management$zone_id == 4, c(1:2))
 
@@ -87,7 +82,7 @@ df <- as.data.frame(stack2017_h3, na.rm = FALSE)
 
 df <- df[!is.na(df$gap.id),] #expansion could only take place where there is a gap now, hence reduction of df to gap.id includes all expansion
 
-write_rds(df, "processed/sensitivity/height_sensitivity/stack_2017_new_exp_df_h3.rds")
+write_rds(df, "data/processed/sensitivity/height_sensitivity/stack_2017_new_exp_df_h3.rds")
 
 # 2017 - height thres 10
 
@@ -102,7 +97,7 @@ df <- as.data.frame(stack2017_h10, na.rm = FALSE)
 
 df <- df[!is.na(df$gap.id),] #expansion could only take place where there is a gap now, hence reduction of df to gap.id includes all expansion
 
-write_rds(df, "processed/sensitivity/height_sensitivity/stack_2017_new_exp_df_h10.rds")
+write_rds(df, "data/processed/sensitivity/height_sensitivity/stack_2017_new_exp_df_h10.rds")
 
 # 2021 - height thres 3
 
@@ -117,7 +112,7 @@ df <- as.data.frame(stack2021_h3, na.rm = FALSE)
 
 df <- df[!is.na(df$gap.id),] #expansion could only take place where there is a gap now, hence reduction of df to gap.id includes all expansion
 
-write_rds(df, "processed/sensitivity/height_sensitivity/stack_2021_new_exp_df_h3.rds")
+write_rds(df, "data/processed/sensitivity/height_sensitivity/stack_2021_new_exp_df_h3.rds")
 
 # 2017 - height thres 10
 
@@ -132,18 +127,18 @@ df <- as.data.frame(stack2021_h10, na.rm = FALSE)
 
 df <- df[!is.na(df$gap.id),] #expansion could only take place where there is a gap now, hence reduction of df to gap.id includes all expansion
 
-write_rds(df, "processed/sensitivity/height_sensitivity/stack_2021_new_exp_df_h10.rds")
+write_rds(df, "data/processed/sensitivity/height_sensitivity/stack_2021_new_exp_df_h10.rds")
 
 
 rm(list = ls())
 
 # --------calculate features per gap.id
 
-df_917_h3 <- readRDS( "processed/sensitivity/height_sensitivity/stack_2017_new_exp_df_h3.rds")
-df_1721_h3<- readRDS("processed/sensitivity/height_sensitivity/stack_2021_new_exp_df_h3.rds")
+df_917_h3 <- readRDS( "data/processed/sensitivity/height_sensitivity/stack_2017_new_exp_df_h3.rds")
+df_1721_h3<- readRDS("data/processed/sensitivity/height_sensitivity/stack_2021_new_exp_df_h3.rds")
 
-df_917_h10 <- readRDS( "processed/sensitivity/height_sensitivity/stack_2017_new_exp_df_h10.rds")
-df_1721_h10<- readRDS("processed/sensitivity/height_sensitivity/stack_2021_new_exp_df_h10.rds")
+df_917_h10 <- readRDS( "data/processed/sensitivity/height_sensitivity/stack_2017_new_exp_df_h10.rds")
+df_1721_h10<- readRDS("data/processed/sensitivity/height_sensitivity/stack_2021_new_exp_df_h10.rds")
 
 
 # height thres 3m 
@@ -214,8 +209,8 @@ gap_features921_h10$h_thres <- as.factor("10") # add indicator for height thresh
 
 # --- load mmu 400 height threshold 5 m gap data --- (used in paper)
 
-gap_features_917 <- readRDS("processed/sensitivity/mmu400_height5/gap_features_new_expanding_917.rds")
-gap_features_1721 <- readRDS("processed/sensitivity/mmu400_height5/gap_features_new_expanding_1721.rds")
+gap_features_917 <- readRDS("data/processed/sensitivity/mmu400_height5/gap_features_new_expanding_917.rds")
+gap_features_1721 <- readRDS("data/processed/sensitivity/mmu400_height5/gap_features_new_expanding_1721.rds")
 
 gap_features_1721$year <- as.factor("17-21")
 gap_features_917$year <- as.factor("9-17")
@@ -275,10 +270,6 @@ gap.creation_unique <- gap.creation %>%
 
 # --------------------------------------------------- graphs
 
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/sensitivity_analysis/height_threshold/"
-setwd(wd)
-
-
 My_Theme = theme(
   title = element_text(size = 18),
   axis.title.x = element_text(size = 30),
@@ -293,7 +284,7 @@ My_Theme = theme(
   legend.position = c(0.3, 0.8))
 
 
-tiff("new_exp_density_creation.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/sensitivity_analysis/height_threshold/new_exp_density_creation.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap_features921, aes(x=exp.area.ha, fill=factor(h_thres))) + geom_density(alpha=.5) +
   # scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x), labels = label_number(accuracy = 0.1))+
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),labels = trans_format("log10", math_format(10^.x)))+
@@ -324,7 +315,7 @@ My_Theme = theme(
 #new vs. expanding
 
 
-tiff("area_new_exp.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/sensitivity_analysis/height_threshold/area_new_exp.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap.creation_unique, aes(x=new.exp, y=median.scaled, colour=h_thres, group=h_thres, fill=h_thres)) + 
   geom_point(shape = 21, size = 10, position = position_dodge(width = 0.5)) +
   theme_classic() + coord_flip() +

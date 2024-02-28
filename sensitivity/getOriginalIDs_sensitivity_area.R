@@ -9,19 +9,18 @@
 
 library(terra)
 
-setwd("C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/")
+#load extent of sensitivity analysis area
 
-#load extent of semsitivity analysis area
-sensitivity.a <- vect("raw/sensitivity_analysis_area.gpkg")
+sensitivity.a <- vect("data/raw/sensitivity_analysis_area.gpkg")
 
 
 # load and subset original gap layer to sensitivity area
 
 # mmu 400m^2
 
-gaps9 <- rast("processed/gaps_final/berchtesgaden_2009_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
-gaps17 <- rast("processed/gaps_final/berchtesgaden_2017_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
-gaps21 <- rast("processed/gaps_final/berchtesgaden_2021_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
+gaps9 <- rast("data/processed/gaps_final/berchtesgaden_2009_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
+gaps17 <- rast("data/processed/gaps_final/berchtesgaden_2017_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
+gaps21 <- rast("data/processed/gaps_final/berchtesgaden_2021_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
 
 # crop gaps to sensitivity area for stacking
 gaps9 <- crop(gaps9, sensitivity.a, snap="near", mask=T)
@@ -31,7 +30,7 @@ gaps21 <- crop(gaps21, sensitivity.a, snap="near", mask=T)
 gap.stack <- c(gaps9, gaps17,  gaps21)
 names(gap.stack) <- c(9,17,21) # observation years
 
-writeRaster("processed/gaps_sensitivity/gap.stack.mmu400.sensitivity.tif")
+writeRaster("data/processed/gaps_sensitivity/gap.stack.mmu400.sensitivity.tif")
 
 # prepare loop to extract IDs for sensitivity area
 
@@ -57,5 +56,5 @@ for (r in numbers) {
 
 }
 
-saveRDS(sensitivity.ids, "processed/sensitivity/mmu_sensitivity/origID_mmu400_sensitivityAoi.rds")
+saveRDS(sensitivity.ids, "data/processed/sensitivity/mmu_sensitivity/origID_mmu400_sensitivityAoi.rds")
 

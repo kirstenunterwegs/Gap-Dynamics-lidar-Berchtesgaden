@@ -10,16 +10,13 @@ library(RColorBrewer)
 library(stringr)  
 
 
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
-
 # --- load  Gap layers  ----
 
-gaps2009.3 <- rast("processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
-gaps2017.3 <- rast("processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
+gaps2009.3 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
+gaps2017.3 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
 
-gaps2009.10 <- rast("processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
-gaps2017.10 <- rast("processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
+gaps2009.10 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
+gaps2017.10 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
 
 
 ###################################################------create forest edge mask for lateral growth classification
@@ -27,18 +24,18 @@ gaps2017.10 <- rast("processed/gaps_sensitivity/height_sensitivity/chm17_sub_sen
 # height thres 3m
 
 boundaries9_h3 <- boundaries(gaps2009.3, directions=8, inner=TRUE)
-writeRaster(boundaries9_h3, "processed/sensitivity/height_sensitivity/gap_boundaries9_h3.tif")
+writeRaster(boundaries9_h3, "data/processed/sensitivity/height_sensitivity/gap_boundaries9_h3.tif")
 
 boundaries17_h3 <- boundaries(gaps2017.3, directions=8, inner=TRUE)
-writeRaster(boundaries17_h3, "processed/sensitivity/height_sensitivity/gap_boundaries17_h3.tif")
+writeRaster(boundaries17_h3, "data/processed/sensitivity/height_sensitivity/gap_boundaries17_h3.tif")
 
 # height thres 10m
 
 boundaries9_h10 <- boundaries(gaps2009.10, directions=8, inner=TRUE)
-writeRaster(boundaries9_h10, "processed/sensitivity/height_sensitivity/gap_boundaries9_h10.tif")
+writeRaster(boundaries9_h10, "data/processed/sensitivity/height_sensitivity/gap_boundaries9_h10.tif")
 
 boundaries17_h10 <- boundaries(gaps2017.10, directions=8, inner=TRUE)
-writeRaster(boundaries17_h10, "processed/sensitivity/height_sensitivity/gap_boundaries17_h10.tif")
+writeRaster(boundaries17_h10, "data/processed/sensitivity/height_sensitivity/gap_boundaries17_h10.tif")
 
 
 ####################################################### classify vertical and horizontal closure ##################################
@@ -46,11 +43,11 @@ writeRaster(boundaries17_h10, "processed/sensitivity/height_sensitivity/gap_boun
 
 #load closure areas with growth information
 
-clo_growth_917_h3 <- rast("processed/sensitivity/height_sensitivity/closure_area_growth_917_h3.tif") 
-clo_growth_1721_h3 <- rast("processed/sensitivity/height_sensitivity/closure_area_growth_1721_h3.tif")
+clo_growth_917_h3 <- rast("data/processed/sensitivity/height_sensitivity/closure_area_growth_917_h3.tif") 
+clo_growth_1721_h3 <- rast("data/processed/sensitivity/height_sensitivity/closure_area_growth_1721_h3.tif")
 
-clo_growth_917_h10 <- rast("processed/sensitivity/height_sensitivity/closure_area_growth_917_h10.tif") 
-clo_growth_1721_h10 <- rast("processed/sensitivity/height_sensitivity/closure_area_growth_1721_h10.tif")
+clo_growth_917_h10 <- rast("data/processed/sensitivity/height_sensitivity/closure_area_growth_917_h10.tif") 
+clo_growth_1721_h10 <- rast("data/processed/sensitivity/height_sensitivity/closure_area_growth_1721_h10.tif")
 
 
 #adjust extents
@@ -102,11 +99,11 @@ gap_closure_mechanism917_h10 <- gap_closure_mechanism917(clo_growth_917_h10, bou
 gap_closure_mechanism1721_h10 <- gap_closure_mechanism1721(clo_growth_1721_h10, boundaries17_h10)
 
 
-terra::writeRaster(gap_closure_mechanism917_h3, "processed/sensitivity/height_sensitivity/gap_closure_mechanism917_h3.tif") 
-terra::writeRaster(gap_closure_mechanism1721_h3, "processed/sensitivity/height_sensitivity/gap_closure_mechanism1721_h3.tif")
+terra::writeRaster(gap_closure_mechanism917_h3, "data/processed/sensitivity/height_sensitivity/gap_closure_mechanism917_h3.tif") 
+terra::writeRaster(gap_closure_mechanism1721_h3, "data/processed/sensitivity/height_sensitivity/gap_closure_mechanism1721_h3.tif")
 
-terra::writeRaster(gap_closure_mechanism917_h10, "processed/sensitivity/height_sensitivity/gap_closure_mechanism917_h10.tif") 
-terra::writeRaster(gap_closure_mechanism1721_h10, "processed/sensitivity/height_sensitivity/gap_closure_mechanism1721_h10.tif")
+terra::writeRaster(gap_closure_mechanism917_h10, "data/processed/sensitivity/height_sensitivity/gap_closure_mechanism917_h10.tif") 
+terra::writeRaster(gap_closure_mechanism1721_h10, "data/processed/sensitivity/height_sensitivity/gap_closure_mechanism1721_h10.tif")
 
 
 
@@ -435,7 +432,7 @@ gap_clo$gap.size <- ordered(gap_clo$gap.size, levels = c("0.01-0.04","0.04-0.1",
 
 gap_clo_h3 <- gap_clo
 
-saveRDS(gap_clo_h3, "processed/sensitivity/height_sensitivity/clo_analysis_ready_h3.rds") 
+saveRDS(gap_clo_h3, "data/processed/sensitivity/height_sensitivity/clo_analysis_ready_h3.rds") 
 
 
 
@@ -490,14 +487,14 @@ gap_clo$gap.size <- ordered(gap_clo$gap.size, levels = c("0.01-0.04","0.04-0.1",
 
 gap_clo_h10 <- gap_clo
 
-saveRDS(gap_clo_h10, "processed/sensitivity/height_sensitivity/clo_analysis_ready_h10.rds") 
+saveRDS(gap_clo_h10, "data/processed/sensitivity/height_sensitivity/clo_analysis_ready_h10.rds") 
 
 
 
 
 # ---- load gap closure information of original mmu400 heigh threshold 5m gap layer and merge
 
-gap_clo_h5<-  readRDS("processed/sensitivity/mmu400_height5/clo_analysis_ready.rds")
+gap_clo_h5<-  readRDS("data/processed/sensitivity/mmu400_height5/clo_analysis_ready.rds")
 
 # reduce to common columns 
 
@@ -514,18 +511,12 @@ gap_clo_h10$h_thres <- as.factor(10)
 
 gap_clo<- rbind(gap_clo_h3, gap_clo_h5, gap_clo_h10)
 
-# -----
-
-# prepare plotting
-
-require(scales)
-
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/sensitivity_analysis/height_threshold/"
-setwd(wd)
 
 
-# --- closure rates as boxplots
+# --- prepare plotting
 
+
+# closure rates as boxplots
 
 
 My_Theme = theme(
@@ -543,7 +534,7 @@ My_Theme = theme(
 
 
 
-tiff("gap_closure_gap.size_box.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/sensitivity_analysis/height_threshold/gap_closure_gap.size_box.tiff", units="in", width=12, height=8, res=300)
 ggplot(subset(gap_clo, closure_mechanism %in% "lateral + vertical"), aes(x=gap.size , y=clo_share_annual, fill=h_thres)) +
   geom_boxplot(position=position_dodge(width=0.9)) +
   theme_minimal()+ coord_flip()  +  

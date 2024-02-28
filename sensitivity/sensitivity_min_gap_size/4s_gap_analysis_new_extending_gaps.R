@@ -6,52 +6,50 @@
 library(plyr)
 library(dplyr)
 library(terra)
-library(ForestGapR)
 library(ggplot2)
 require(scales)
 library(tidyverse)
-library(ggthemes)
 
-
-
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
 
 # --- load classified Gap layers of new and expanding gaps ----
 
-gaps2009 <- rast("processed/gaps_sensitivity/min_size_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
-gaps2017<- rast("processed/gaps_sensitivity/min_size_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
-gaps2021<- rast("processed/gaps_sensitivity/min_size_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
+gaps2009 <- rast("data/processed/gaps_sensitivity/min_size_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
+gaps2017<- rast("data/processed/gaps_sensitivity/min_size_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
+gaps2021<- rast("data/processed/gaps_sensitivity/min_size_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
 
 # new-expanded classification
 
-gaps2017 <- rast("processed/sensitivity/mmu_sensitivity/gaps2017_new_extended_stable_sensitivity.tif")
-gaps2021 <- rast("processed/sensitivity/mmu_sensitivity/gaps2021_new_extended_stable_sensitivity.tif")
+gaps2017 <- rast("data/processed/sensitivity/mmu_sensitivity/gaps2017_new_extended_stable_sensitivity.tif")
+gaps2021 <- rast("data/processed/sensitivity/mmu_sensitivity/gaps2021_new_extended_stable_sensitivity.tif")
+
 
 # crop gaps ID
+
 gaps2017.id <-crop(gaps2017.id, gaps2017, snap="near",mask=TRUE) 
 gaps2021.id <-crop(gaps2021.id, gaps2021, snap="near",mask=TRUE) 
 
+
 #load expansion and closure layer and extract only expansion areas
-exp_clo <- rast("processed/sensitivity/mmu_sensitivity/exp_clo_917_cn2cr2_mmu100n8_filtered.tif")
+
+exp_clo <- rast("data/processed/sensitivity/mmu_sensitivity/exp_clo_917_cn2cr2_mmu100n8_filtered.tif")
 exp <- classify(exp_clo, cbind(1, NA)) #replace 1=closure with NA to get only expansion areas
 
-exp_clo1721 <- rast("processed/sensitivity/mmu_sensitivity/exp_clo_1721_cn2cr2_mmu100n8_filtered.tif")
+exp_clo1721 <- rast("data/processed/sensitivity/mmu_sensitivity/exp_clo_1721_cn2cr2_mmu100n8_filtered.tif")
 exp1721 <- classify(exp_clo1721, cbind(1, NA)) #replace 1=closure with NA to get only expansion areas
+
 
 # --- load NP information 
 
-foresttype <- rast("processed/environment_features/forest_type2020_reclass_1m.tif")
-aspect<-  rast("processed/environment_features/aspect_2021_classified_1m.tif")
-elevation.below1800 <- rast("processed/environment_features/elevation_below1800_200steps.tif")
-management <- vect("raw/npb_zonierung_22_epsg25832.shp")
+foresttype <- rast("data/processed/environment_features/forest_type2020_reclass_1m.tif")
+aspect<-  rast("data/processed/environment_features/aspect_2021_classified_1m.tif")
+elevation.below1800 <- rast("data/processed/environment_features/elevation_below1800_200steps.tif")
+management <- vect("data/raw/npb_zonierung_22_epsg25832.shp")
 # exclude management zone
 core.zone <- subset(management, management$zone_id == 4, c(1:2))
 
 # ---- crop layers to research sites:
 
 # crop all layers to same extent
-
 
 foresttype <- crop(foresttype, gaps2017.id)
 aspect<-  crop(aspect, gaps2017.id)
@@ -60,7 +58,7 @@ elevation.below1800 <- crop(elevation, gaps2017.id)
 
 # --- stack gap information and crop it
 
-#2017
+# 2017
 
 stack2017 <- c(gaps2017.id, gaps2017, exp, foresttype , elevation.below1800, aspect)
 names(stack2017) <- c("gap.id", "new_extended", "expansion", "forest_type", "elevation", "aspect")
@@ -69,17 +67,17 @@ stack2017 <- mask(stack2017, foresttype)
 stack2017 <- mask(stack2017, core.zone)
 stack2017 <- mask(stack2017, elevation.below1800)
 
-writeRaster(stack2017, "processed/sensitivity/mmu_sensitivity/stack.2017.all.gap.information.expansion_sensitivity.tif")
-gap_stack_2017 <- rast("processed/sensitivity/mmu_sensitivity/stack.2017.all.gap.information.expansion_sensitivity.tif")
+writeRaster(stack2017, "data/processed/sensitivity/mmu_sensitivity/stack.2017.all.gap.information.expansion_sensitivity.tif")
+gap_stack_2017 <- rast("data/processed/sensitivity/mmu_sensitivity/stack.2017.all.gap.information.expansion_sensitivity.tif")
 
 
 df <- as.data.frame(gap_stack_2017, na.rm = FALSE) 
 
 df1 <- df[!is.na(df$gap.id),] #expansion could only take place where there is a gap now, hence reduction of df to gap.id includes all expansion
 
-write_rds(df1, "processed/sensitivity/mmu_sensitivity/stack_2017_new_exp_df.rds")
+write_rds(df1, "data/processed/sensitivity/mmu_sensitivity/stack_2017_new_exp_df.rds")
 
-#2021
+# 2021
 
 stack21 <- c(gaps2021.id, gaps2021, exp1721, foresttype, elevation.below1800, aspect)
 names(stack21) <- c("gap.id", "new_extended", "expansion", "forest_type", "elevation", "aspect")
@@ -88,21 +86,21 @@ stack21 <- mask(stack21, foresttype)
 stack21 <- mask(stack21, core.zone)
 stack21 <- mask(stack21, elevation.below1800)
 
-writeRaster(stack21, "processed/sensitivity/mmu_sensitivity/stack.2021.all.gap.information.expansion_sensitivity.tif")
-gap_stack_2021 <- rast("processed/sensitivity/mmu_sensitivity/stack.2021.all.gap.information.expansion_sensitivity.tif")
+writeRaster(stack21, "data/processed/sensitivity/mmu_sensitivity/stack.2021.all.gap.information.expansion_sensitivity.tif")
+gap_stack_2021 <- rast("data/processed/sensitivity/mmu_sensitivity/stack.2021.all.gap.information.expansion_sensitivity.tif")
 
 df <- as.data.frame(gap_stack_2021, na.rm = FALSE) 
 
 df2 <- df[!is.na(df$gap.id),] #expansion could only take place where there is a gap now, hence reduction of df to gap.id includes all expansion
 
-write_rds(df2, "processed/sensitivity/mmu_sensitivity/stack_2021_new_exp_df.rds")
+write_rds(df2, "data/processed/sensitivity/mmu_sensitivity/stack_2021_new_exp_df.rds")
 
 
 
 # --------calculate features per gap.id
 
-df1 <- readRDS( "processed/sensitivity/mmu_sensitivity/stack_2017_new_exp_df.rds")
-df2<- readRDS("processed/sensitivity/mmu_sensitivity/stack_2021_new_exp_df.rds")
+df1 <- readRDS( "data/processed/sensitivity/mmu_sensitivity/stack_2017_new_exp_df.rds")
+df2<- readRDS("data/processed/sensitivity/mmu_sensitivity/stack_2021_new_exp_df.rds")
 
 
 gap_features_917 <- df1 %>% group_by(gap.id) %>%
@@ -141,8 +139,8 @@ gap_features921$mmu <- as.factor("100")
 
 # ----- load mmu 400 gap data
 
-gap_features_917 <- readRDS("processed/sensitivity/mmu400_height5/gap_features_new_expanding_917.rds")
-gap_features_1721 <- readRDS("processed/sensitivity/mmu400_height5/gap_features_new_expanding_1721.rds")
+gap_features_917 <- readRDS("data/processed/sensitivity/mmu400_height5/gap_features_new_expanding_917.rds")
+gap_features_1721 <- readRDS("data/processed/sensitivity/mmu400_height5/gap_features_new_expanding_1721.rds")
 
 gap_features_1721$year <- as.factor("17-21")
 gap_features_917$year <- as.factor("9-17")
@@ -201,10 +199,6 @@ gap.creation_unique <- gap.creation %>%
 
 # --------------------------------------------------- graphs
 
-wd <- "processed/Sensitivity/results/"
-setwd(wd)
-
-
 
 My_Theme = theme(
   title = element_text(size = 18),
@@ -221,7 +215,7 @@ My_Theme = theme(
 
 
 
-tiff("new_exp_density_creation.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/sensitivity_analysis/mmu/new_exp_density_creation.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap_features921, aes(x=exp.area.ha, fill=factor(mmu))) + geom_density(alpha=.5) +
   # scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x), labels = label_number(accuracy = 0.1))+
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),labels = trans_format("log10", math_format(10^.x)))+
@@ -253,7 +247,7 @@ My_Theme = theme(
 #new vs. expanding
 
 
-tiff("area_new_exp.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/sensitivity_analysis/mmu/area_new_exp.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap.creation_unique, aes(x=new.exp, y=median.scaled, colour=mmu, group=mmu, fill=mmu)) + 
   geom_point(shape = 21, size = 10, position = position_dodge(width = 0.5)) +
   theme_classic() + coord_flip() +

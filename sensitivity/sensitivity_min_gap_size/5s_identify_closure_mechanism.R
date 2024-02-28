@@ -10,18 +10,15 @@ library(RColorBrewer)
 library(stringr)  
 
 
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
-
 # --- load Gap layers ----
 
-gaps2009 <- rast("processed/gaps_sensitivity/min_size_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
-gaps2017<- rast("processed/gaps_sensitivity/min_size_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
-gaps2021<- rast("processed/gaps_sensitivity/min_size_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
+gaps2009 <- rast("data/processed/gaps_sensitivity/min_size_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
+gaps2017<- rast("data/processed/gaps_sensitivity/min_size_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
+gaps2021<- rast("data/processed/gaps_sensitivity/min_size_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
 
 
 
-###################################################------create forest edge mask for lateral growth classification
+#------create forest edge mask for lateral growth classification
 
 
 boundaries9 <- boundaries(gaps2009, directions=8, inner=TRUE)
@@ -30,17 +27,18 @@ writeRaster(boundaries9, "processed/sensitivity/mmu_sensitivity/gap_boundaries9.
 boundaries17 <- boundaries(gaps2017, directions=8, inner=TRUE)
 writeRaster(boundaries9, "processed/sensitivity/mmu_sensitivity/gap_boundaries17.tif")
 
-####################################################### classify vertical and horizontal closure ##################################
+
+# ---- classify vertical and horizontal closure ----
 
 #load closure areas with growth information
 
-clo_growth_917 <- rast("processed/sensitivity/mmu_sensitivity/closure_area_growth_917.tif") 
-clo_growth_1721 <- rast("processed/sensitivity/mmu_sensitivity/closure_area_growth_1721.tif")
+clo_growth_917 <- rast("data/processed/sensitivity/mmu_sensitivity/closure_area_growth_917.tif") 
+clo_growth_1721 <- rast("data/processed/sensitivity/mmu_sensitivity/closure_area_growth_1721.tif")
 
 #load gap boundaries
 
-boundaries.2009 <- rast("processed/sensitivity/mmu_sensitivity/gap_boundaries9.tif") 
-boundaries.2017 <- rast("processed/sensitivity/mmu_sensitivity/gap_boundaries17.tif")
+boundaries.2009 <- rast("data/processed/sensitivity/mmu_sensitivity/gap_boundaries9.tif") 
+boundaries.2017 <- rast("data/processed/sensitivity/mmu_sensitivity/gap_boundaries17.tif")
 
 #adjust extents
 clo_growth_917 <- crop(clo_growth_917, boundaries.2009)
@@ -81,23 +79,20 @@ gap_closure_mechanism917 <- gap_closure_mechanism917(clo_growth_917, boundaries.
 gap_closure_mechanism1721 <- gap_closure_mechanism1721(clo_growth_1721, boundaries.2017)
 
 
-terra::writeRaster(gap_closure_mechanism917, "processed/sensitivity/mmu_sensitivity/gap_closure_mechanism917.tif", overwrite=TRUE) 
-terra::writeRaster(gap_closure_mechanism1721, "processed/sensitivity/mmu_sensitivity/gap_closure_mechanism1721.tif", overwrite=TRUE)
-
-###----------- analyze closure per gap (size), elevation, aspect, management and forest type ----------- ###
+terra::writeRaster(gap_closure_mechanism917, "data/processed/sensitivity/mmu_sensitivity/gap_closure_mechanism917.tif", overwrite=TRUE) 
+terra::writeRaster(gap_closure_mechanism1721, "data/processed/sensitivity/mmu_sensitivity/gap_closure_mechanism1721.tif", overwrite=TRUE)
 
 
-####################################################################################################################
-# prepare closure mechanism dfs per timestep
-###################################################################################################################
+
+# -------- prepare closure mechanism dfs per timestep -------- 
 
 
-# 2009 - 2017
-###################################################################################################################
+# --- 2009 - 2017 ---
+
 
 #merge closure mechanism with gaps
-gap_closure_mechanism917 <- rast( "processed/sensitivity/mmu_sensitivity/gap_closure_mechanism917.tif")
-gaps2009 <- rast("processed/gaps_sensitivity/min_size_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif") # layer has been cropped previously to the research area
+gap_closure_mechanism917 <- rast( "data/processed/sensitivity/mmu_sensitivity/gap_closure_mechanism917.tif")
+gaps2009 <- rast("data/processed/gaps_sensitivity/min_size_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif") # layer has been cropped previously to the research area
 
 gaps2009 <- crop(gaps2009, gap_closure_mechanism917)
 gap_closure_mechanism_stack <- c(gap_closure_mechanism917, gaps2009)
@@ -168,12 +163,12 @@ gap_clo_per_id_nona_917<-gap_clo_per_id_nona %>%
                                      `(1,45]`=">1")))
 
 
-# 2017- 2021
-###################################################################################################################
+# ---- 2017- 2021
+
 
 # #merge closure mechanism with gaps
-gap_closure_mechanism1721 <- rast("processed/sensitivity/mmu_sensitivity/gap_closure_mechanism1721.tif")
-gaps2017<- rast("processed/gaps_sensitivity/min_size_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif") # layer has been cropped previously to the research area
+gap_closure_mechanism1721 <- rast("data/processed/sensitivity/mmu_sensitivity/gap_closure_mechanism1721.tif")
+gaps2017<- rast("data/processed/gaps_sensitivity/min_size_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif") # layer has been cropped previously to the research area
 
 gaps2017 <- crop(gaps2017, gap_closure_mechanism1721)
 gap_closure_mechanism_stack_1721 <- c(gap_closure_mechanism1721, gaps2017)
@@ -295,13 +290,13 @@ gap_clo$gap.size <- as.factor(gap_clo$gap.size)
 
 gap_clo$gap.size <- ordered(gap_clo$gap.size, levels = c("0.01-0.04","0.04-0.1", "0.1-0.2",  "0.2-0.3",  "0.3-0.4",  "0.4-0.5",  "0.5-0.6",  "0.6-0.7",  "0.7-0.8",  "0.8-0.9",  "0.9-1", ">1" ))
 
-saveRDS(gap_clo, "processed/sensitivity/mmu_sensitivity/clo_analysis_ready.rds") 
+saveRDS(gap_clo, "data/processed/sensitivity/mmu_sensitivity/clo_analysis_ready.rds") 
 
 
 
 # ---- load gap closure information of original mmu400 gap layer and merge
 
-gap_clo400 <-  readRDS("processed/sensitivity/mmu400_height5/clo_analysis_ready.rds")
+gap_clo400 <-  readRDS("data/processed/sensitivity/mmu400_height5/clo_analysis_ready.rds")
 
 # reduce to common columns 
 
@@ -317,28 +312,6 @@ gap_clo$mmu <- as.factor(100)
 
 gap_clo<- rbind(gap_clo, gap_clo400)
 
-# -----
-
-# prepare plotting
-My_Theme = theme(
-  title = element_text(size = 18),
-  axis.title.x = element_text(size = 28),
-  axis.text.x = element_text(size = 24),
-  axis.text.y = element_text(size = 24),
-  axis.title.y = element_text(size = 28),
-  legend.key.height = unit(1, 'cm'),
-  legend.title = element_text(size=18),
-  legend.text = element_text(size=18),
-  strip.text.x = element_text(size = 16),
-  strip.text.y = element_text(size = 16),
-  legend.position="top") #bottom
-
-
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/sensitivity_analysis/mmu/"
-setwd(wd)
-
-
-# ----- closure across NP ------------
 
 # --- closure rates as boxplots
 
@@ -357,7 +330,7 @@ My_Theme = theme(
 
 
 
-tiff("gap_closure_gap.size_box.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/sensitivity_analysis/mmu/gap_closure_gap.size_box.tiff", units="in", width=12, height=8, res=300)
 ggplot(subset(gap_clo, closure_mechanism %in% "lateral + vertical"), aes(x=gap.size , y=clo_share_annual, fill=mmu)) +
   geom_boxplot(position=position_dodge(width=0.9)) +
   theme_minimal()+ coord_flip()  +  

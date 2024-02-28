@@ -11,12 +11,9 @@ library(terra)
 library(lidR)
 library(ggplot2)
 
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
-
 
 # original artifacts masked CHM was cropped to a subarea - in this case the Klausbach valley of the reserach region
-chm_valley<- rast("processed/closure/height_growth_in_crowns/chm_berchtesgaden_stack_1m_valley_crop.tif")
+chm_valley<- rast("data/processed/closure/height_growth_in_crowns/chm_berchtesgaden_stack_1m_valley_crop.tif")
 chm9 <- chm_valley[[1]]
 chm21 <- chm_valley[[3]]
 chm17 <- chm_valley[[2]]
@@ -52,9 +49,9 @@ crowns21 <- dalponte2016(chm_smooth21, ttops21, th_tree = 10, max_cr=10)()
 #plot(crowns9, col = pastel.colors(5000))
 
 
-# terra::writeRaster(crowns9, "processed/closure/height_growth_in_crowns/crowns9_klausbachtal.tif")
-# terra::writeRaster(crowns17, "processed/closure/height_growth_in_crowns/crowns17_klausbachtal.tif")
-# terra::writeRaster(crowns21, "processed/closure/height_growth_in_crowns/crowns21_klausbachtal.tif")
+# terra::writeRaster(crowns9, "data/processed/closure/height_growth_in_crowns/crowns9_klausbachtal.tif")
+# terra::writeRaster(crowns17, "data/processed/closure/height_growth_in_crowns/crowns17_klausbachtal.tif")
+# terra::writeRaster(crowns21, "data/processed/closure/height_growth_in_crowns/crowns21_klausbachtal.tif")
 
 
 # --- mask to growth within and outside of tree crowns
@@ -73,12 +70,12 @@ growth_out_crowns1721 <- mask(crown_growth_1721, crowns17, inverse=TRUE)
 #save growth layer 
 
 #2009-2017
-terra::writeRaster(growth_in_crowns917, "processed/closure/height_growth_in_crowns/growth_in_crowns_917_klausbachtal.tif",overwrite=TRUE)
-terra::writeRaster(growth_out_crowns917, "processed/closure/height_growth_in_crowns/growth_out_crowns_917_klausbachtal.tif",overwrite=TRUE)
+terra::writeRaster(growth_in_crowns917, "data/processed/closure/height_growth_in_crowns/growth_in_crowns_917_klausbachtal.tif")
+terra::writeRaster(growth_out_crowns917, "data/processed/closure/height_growth_in_crowns/growth_out_crowns_917_klausbachtal.tif")
 
 #2017-2021
-terra::writeRaster(growth_in_crowns1721, "processed/closure/height_growth_in_crowns/growth_in_crowns_1721_klausbachtal.tif",overwrite=TRUE)
-terra::writeRaster(growth_out_crowns1721, "processed/closure/height_growth_in_crowns/growth_out_crowns_1721_klausbachtal.tif",overwrite=TRUE)
+terra::writeRaster(growth_in_crowns1721, "data/processed/closure/height_growth_in_crowns/growth_in_crowns_1721_klausbachtal.tif")
+terra::writeRaster(growth_out_crowns1721, "data/processed/closure/height_growth_in_crowns/growth_out_crowns_1721_klausbachtal.tif")
 
 
 # --- data wrangling for plotting height growth within and outside of tree crowns
@@ -118,13 +115,10 @@ hist(non_crown1721$height_gain)
 growth_pixel_height_dist1721 <- rbind(crown_center1721, non_crown1721) # combine in - and out-crown growth data
 
 
-saveRDS(growth_pixel_height_dist1721, file = "processed/closure/height_growth_in_crowns/growth_pixel_height_dist_1721.rds")
-saveRDS(growth_pixel_height_dist917, file = "processed/closure/height_growth_in_crowns/growth_pixel_height_dist_917.rds")
+saveRDS(growth_pixel_height_dist1721, file = "data/processed/closure/height_growth_in_crowns/growth_pixel_height_dist_1721.rds")
+saveRDS(growth_pixel_height_dist917, file = "data/processed/closure/height_growth_in_crowns/growth_pixel_height_dist_917.rds")
 
 # --- get Histogram of Growth-Pixel per Height class
-
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/"
-setwd(wd)
 
 My_Theme = theme(
   title = element_text(size = 18),
@@ -138,14 +132,14 @@ My_Theme = theme(
   strip.text.x = element_text(size = 16),
   legend.position="bottom")
 
-tiff("height_gain_within_out_crown_1721_Klausbachtal.tiff", units="in", width=12, height=8, res=300)   
+tiff("data/results/height_gain_within_out_crown_1721_Klausbachtal.tiff", units="in", width=12, height=8, res=300)   
 ggplot(growth_pixel_height_dist1721, aes(x=height_gain, fill=type)) + geom_bar(color = "white" )+
   scale_x_binned(n.breaks = 28)+
   scale_fill_manual(values=c("#E69F00","#EE2525","#999999"))+
   theme_minimal() + labs(x = "height gain in [m]", y = "n gain pixels")+ My_Theme
 dev.off()
 
-tiff("height_gain_within_out_crown_917_Klausbachtal.tiff", units="in", width=12, height=8, res=300)   
+tiff("data/results/height_gain_within_out_crown_917_Klausbachtal.tiff", units="in", width=12, height=8, res=300)   
 ggplot(growth_pixel_height_dist917, aes(x=height_gain, fill=type)) + geom_bar(color = "white" )+
   scale_x_binned(n.breaks = 28)+
   scale_fill_manual(values=c("#E69F00","#EE2525","#999999"))+

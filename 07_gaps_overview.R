@@ -11,14 +11,11 @@ library(terra)
 library(ggplot2)
 
 
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
-
 # --- load layers ----
 
-gaps2009 <- rast("processed/gaps_final/berchtesgaden_2009_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
-gaps2017 <- rast("processed/gaps_final/berchtesgaden_2017_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
-gaps2021 <- rast("processed/gaps_final/berchtesgaden_2021_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
+gaps2009 <- rast("data/processed/gaps_final/berchtesgaden_2009_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
+gaps2017 <- rast("data/processed/gaps_final/berchtesgaden_2017_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
+gaps2021 <- rast("data/processed/gaps_final/berchtesgaden_2021_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
 
 # crop gaps to CHM 
 gaps2009 <- crop(gaps2009, gaps2021, snap="near",mask=TRUE) 
@@ -30,10 +27,10 @@ gap.stack <- c(gaps2009, gaps2017, gaps2021)
 
 # --- load NP information 
 
-foresttype <- rast("processed/environment_features/forest_type2020_reclass_1m.tif")
-management <- vect("raw/npb_zonierung_22_epsg25832.shp")
-elevation.below1800 <- rast("processed/environment_features/elevation_below1800_200steps.tif")
-aspect<-  rast("processed/environment_features/aspect_2021_classified_1m.tif")
+foresttype <- rast("data/processed/environment_features/forest_type2020_reclass_1m.tif")
+management <- vect("data/raw/npb_zonierung_22_epsg25832.shp")
+elevation.below1800 <- rast("data/processed/environment_features/elevation_below1800_200steps.tif")
+aspect<-  rast("data/processed/environment_features/aspect_2021_classified_1m.tif")
 
 
 # exclude management zone
@@ -45,13 +42,13 @@ gap.stack <- mask(gap.stack, elevation.below1800)
 gap.stack <- mask(gap.stack, foresttype)
 
 
-writeRaster(gap.stack, "processed/gaps_final/gaps_masked_reserach_area_paper.tif")
+writeRaster(gap.stack, "data/processed/gaps_final/gaps_masked_reserach_area_paper.tif")
 
 # convert masked gap stack to data frame & write to disk
 gap.stack.df <- as.data.frame(gap.stack)
-saveRDS(gap.stack.df,"processed/gaps_final/gaps_masked_reserach_area_paper.df.rds" )
+saveRDS(gap.stack.df,"data/processed/gaps_final/gaps_masked_reserach_area_paper.df.rds" )
 
-gap.stack.df <- readRDS("processed/gaps_final/gaps_masked_reserach_area_paper.df.rds")
+gap.stack.df <- readRDS("data/processed/gaps_final/gaps_masked_reserach_area_paper.df.rds")
 names(gap.stack.df) <- c("gaps9", "gaps17", "gaps21")
 
 # --- summarize number & area of gaps:
@@ -85,9 +82,9 @@ sum(gap_counts$number_gaps) # 11331
 
 # load & crop chm cropped to research area
 
-chm9 <- rast("processed/CHM_data/chm9_artifacts_masked.tif")
-chm17 <- rast("processed/CHM_data/chm17_artifacts_masked.tif")
-chm21 <- rast("processed/CHM_data/chm21_artifacts_masked.tif")
+chm9 <- rast("data/processed/CHM_data/chm9_artifacts_masked.tif")
+chm17 <- rast("data/processed/CHM_data/chm17_artifacts_masked.tif")
+chm21 <- rast("data/processed/CHM_data/chm21_artifacts_masked.tif")
 
 names(gap.stack) <- c("gaps9", "gaps17", "gaps21")
 
@@ -343,7 +340,7 @@ stats_all_ftype$gap_area_ha <- stats_all_ftype$gap_area/10000 #convert area to h
 #drop gaps < 400 m2 (emerge through masking of research area, as large gaps transcending management area or elevation lines get cut)
 stats_all_ftype <- stats_all_ftype[stats_all_ftype$gap_area >= 400,]
 
-saveRDS(stats_all_ftype, "processed/gap_features/stats_all_ftype.rds")
+saveRDS(stats_all_ftype, "data/processed/gap_features/stats_all_ftype.rds")
 
 
 #------- calculate gap stats per elevation
@@ -362,7 +359,7 @@ stats_all_elevation <- stats_all_elevation[stats_all_elevation$gap_area >= 400,]
 stats_all_elevation$elevation <- factor(stats_all_elevation$elevation , levels=c("600-800", "800-1000", "1000-1200",
                                                                                  "1200-1400", "1400-1600", "1600-1800"))
 
-saveRDS(stats_all_elevation, "processed/gap_features/stats_all_elevation.rds")
+saveRDS(stats_all_elevation, "data/processed/gap_features/stats_all_elevation.rds")
 
 
 #------- calculate gap stats per aspect
@@ -378,7 +375,7 @@ stats_all_aspect$gap_area_ha <- stats_all_aspect$gap_area/10000 #convert area to
 #drop gaps < 400 m2 (emerge through masking of research area, as large gaps transcending management area or elevation lines get cut)
 stats_all_aspect <- stats_all_aspect[stats_all_aspect$gap_area >= 400,]
 
-saveRDS(stats_all_aspect, "processed/gap_features/stats_all_aspect.rds")
+saveRDS(stats_all_aspect, "data/processed/gap_features/stats_all_aspect.rds")
 
 
 

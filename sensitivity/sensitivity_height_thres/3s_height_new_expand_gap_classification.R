@@ -13,19 +13,16 @@ library(raster)
 library(doParallel)
 library(dplyr)
 
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
-
 
 # --- load gap layers ----
 
-gaps2009.3 <- rast("processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
-gaps2017.3 <- rast("processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
-gaps2021.3 <- rast("processed/gaps_sensitivity/height_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
+gaps2009.3 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
+gaps2017.3 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
+gaps2021.3 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_height3_mmu400n8.tif")
 
-gaps2009.10 <- rast("processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
-gaps2017.10 <- rast("processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
-gaps2021.10 <- rast("processed/gaps_sensitivity/height_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
+gaps2009.10 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
+gaps2017.10 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
+gaps2021.10 <- rast("data/processed/gaps_sensitivity/height_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_height10_mmu400n8.tif")
 
 
 
@@ -48,8 +45,9 @@ gaps.df.10[gaps.df.10 == "NaN"] <- 0 # replace NaN with 0 to indicate vegetation
 gaps.df.10[is.na(gaps.df.10)] <- 0
 
 
-### identify new and extending gaps
-#cluster approach for whole NP
+# --- identify new and extending gaps ---
+
+# cluster approach for whole NP
 
 # --- 2009-2017 --- height threshold 3m ---
 
@@ -95,7 +93,7 @@ rclamat3 <- cbind(ID_vector_stablegap, ID_vector_replace_stable)
 rclmat <- rbind(rclmat1, rclamat2, rclamat3)
 
 gaps2017.3_class<- classify(gaps2017.3, rclmat, include.lowest=TRUE)
-writeRaster(gaps2017.3_class, "processed/sensitivity/height_sensitivity/gaps2017_new_extended_stable_h3.tif")
+writeRaster(gaps2017.3_class, "data/processed/sensitivity/height_sensitivity/gaps2017_new_extended_stable_h3.tif")
 
 
 # --- 2009-2017 --- height threshold 10m ---
@@ -142,7 +140,7 @@ rclamat3 <- cbind(ID_vector_stablegap, ID_vector_replace_stable)
 rclmat <- rbind(rclmat1, rclamat2, rclamat3)
 
 gaps2017.10_class<- classify(gaps2017.10, rclmat, include.lowest=TRUE)
-writeRaster(gaps2017.10_class, "processed/sensitivity/height_sensitivity/gaps2017_new_extended_stable_h10.tif")
+writeRaster(gaps2017.10_class, "data/processed/sensitivity/height_sensitivity/gaps2017_new_extended_stable_h10.tif")
 
 
 
@@ -191,7 +189,7 @@ rclamat3 <- cbind(ID_vector_stablegap, ID_vector_replace_stable)
 rclmat <- rbind(rclmat1, rclamat2, rclamat3)
 
 gaps2021.3_class<- classify(gaps2021.3, rclmat, include.lowest=TRUE)
-writeRaster(gaps2021.3_class, "processed/sensitivity/height_sensitivity/gaps2021_new_extended_stable_h3.tif")
+writeRaster(gaps2021.3_class, "data/processed/sensitivity/height_sensitivity/gaps2021_new_extended_stable_h3.tif")
 
 
 
@@ -239,6 +237,6 @@ rclamat3 <- cbind(ID_vector_stablegap, ID_vector_replace_stable)
 rclmat <- rbind(rclmat1, rclamat2, rclamat3)
 
 gaps2021.10_class<- classify(gaps2021.10, rclmat, include.lowest=TRUE)
-writeRaster(gaps2021.10_class, "processed/sensitivity/height_sensitivity/gaps2021_new_extended_stable_h10.tif")
+writeRaster(gaps2021.10_class, "data/processed/sensitivity/height_sensitivity/gaps2021_new_extended_stable_h10.tif")
 
 

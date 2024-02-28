@@ -13,17 +13,15 @@ library(raster)
 library(doParallel)
 library(dplyr)
 
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/processed/"
-setwd(wd)
 
 # --- load Gap layers ----
 
-gaps2009 <- rast("processed/gaps_sensitivity/min_size_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
-gaps2017<- rast("processed/gaps_sensitivity/min_size_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
-gaps2021<- rast("processed/gaps_sensitivity/min_size_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
+gaps2009 <- rast("data/processed/gaps_sensitivity/min_size_sensitivity/chm9_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
+gaps2017<- rast("data/processed/gaps_sensitivity/min_size_sensitivity/chm17_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
+gaps2021<- rast("data/processed/gaps_sensitivity/min_size_sensitivity/chm21_sub_sensitivity_patchid_cn2cr2_mmu100n8.tif")
 
 
-# stack gaps and identify amount of gap Ids in new gap ------------------------------
+# stack gaps and identify amount of gap Ids in new gap 
 
 gaps.df <- c(gaps2009, gaps2017, gaps2021)
 gaps.df <- as.data.frame(gaps.df, na.rm=FALSE)
@@ -33,7 +31,7 @@ gaps.df[gaps.df == "NaN"] <- 0 # replace NaN with 0 to indicate vegetation pixel
 gaps.df[is.na(gaps.df)] <- 0
 
 
-# 2009-2017 ---------------------------------------------------------------------
+# ---- 2009-2017 ----
 
 cl <- makeCluster(detectCores(-1)) # use all but one core for calculations (at least one free core necessary for operating system)
 registerDoParallel(cl)
@@ -56,8 +54,8 @@ stopCluster(cl)
 class_df <- as.data.frame(class_df)
 
 
-saveRDS(class_df, "sensitivity/mmu_sensitivity/new_exp_gap_class_917_sensitivity.rds")
-class_df<- readRDS("sensitivity/mmu_sensitivity/new_exp_gap_class_917_sensitivity.rds")
+saveRDS(class_df, "data/sensitivity/mmu_sensitivity/new_exp_gap_class_917_sensitivity.rds")
+class_df<- readRDS("data/sensitivity/mmu_sensitivity/new_exp_gap_class_917_sensitivity.rds")
 
 class_df_917 <- class_df
 names(class_df) <- c("gap_id", "class") #rename columns
@@ -82,10 +80,10 @@ rclmat <- rbind(rclmat1, rclamat2, rclamat3)
 
 gaps2017_class<- classify(gaps2017, rclmat, include.lowest=TRUE)
 
-writeRaster(gaps2017_class, "sensitivity/mmu_sensitivity/gaps2017_new_extended_stable_sensitivity.tif")
+writeRaster(gaps2017_class, "data/sensitivity/mmu_sensitivity/gaps2017_new_extended_stable_sensitivity.tif")
 
 
-# 2017-2021 ---------------------------------------------------------------------
+# ---- 2017-2021 ----
 
 cl <- makeCluster(detectCores(-1)) # use all but one core for calculations (at least one free core necessary for operating system)
 registerDoParallel(cl)
@@ -108,8 +106,8 @@ stopCluster(cl)
 class_df <- as.data.frame(class_df)
 
 
-saveRDS(class_df, "sensitivity/mmu_sensitivity/new_exp_gap_class_1721_sensitivity.rds")
-class_df <- readRDS( "sensitivity/mmu_sensitivity/new_exp_gap_class_1721_sensitivity.rds")
+saveRDS(class_df, "data/sensitivity/mmu_sensitivity/new_exp_gap_class_1721_sensitivity.rds")
+class_df <- readRDS( "data/sensitivity/mmu_sensitivity/new_exp_gap_class_1721_sensitivity.rds")
 
 class_df_1721 <- class_df
 names(class_df) <- c("gap_id", "class") #rename columns
@@ -134,6 +132,6 @@ rclmat <- rbind(rclmat1, rclamat2, rclamat3)
 
 gaps2021_class<- classify(gaps2021, rclmat, include.lowest=TRUE)
 
-writeRaster(gaps2021_class, "sensitivity/mmu_sensitivity/gaps2021_new_extended_stable_sensitivity.tif")
+writeRaster(gaps2021_class, "data/sensitivity/mmu_sensitivity/gaps2021_new_extended_stable_sensitivity.tif")
 
 

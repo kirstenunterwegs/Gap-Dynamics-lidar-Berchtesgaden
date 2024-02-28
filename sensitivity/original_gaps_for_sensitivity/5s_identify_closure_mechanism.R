@@ -9,36 +9,33 @@ library(ggplot2)
 library(RColorBrewer)
 
 
-
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
-
 # --- load Gap layers ----
 
-gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu400.sensitivity.tif") # layer have been cropped previously to the research area
+gap_stack <- rast("data/processed/gaps_sensitivity/gap.stack.mmu400.sensitivity.tif") # layer have been cropped previously to the research area
 gaps2009<- gap_stack[[1]]
 gaps2017<- gap_stack[[2]]
 
 
 
-###################################################------create forest edge mask for lateral growth classification
+#------create forest edge mask for lateral growth classification
 
 
 boundaries9 <- boundaries(gaps2009, directions=8, inner=TRUE)
-writeRaster(boundaries9, "processed/sensitivity/mmu400_height5/gap_boundaries9.tif")
+writeRaster(boundaries9, "data/processed/sensitivity/mmu400_height5/gap_boundaries9.tif")
 
 boundaries17 <- boundaries(gaps2017, directions=8, inner=TRUE)
-writeRaster(boundaries17, "processed/sensitivity/mmu400_height5/gap_boundaries17.tif")
+writeRaster(boundaries17, "data/processed/sensitivity/mmu400_height5/gap_boundaries17.tif")
 
-####################################################### classify vertical and horizontal closure ##################################
+
+# ----- classify vertical and horizontal closure ----
 
 #load closure areas with growth information
-clo_growth_917 <- rast("processed/sensitivity/mmu400_height5/closure_area_growth_917.tif")
-clo_growth_1721 <- rast("processed/sensitivity/mmu400_height5/closure_area_growth_1721.tif")
+clo_growth_917 <- rast("data/processed/sensitivity/mmu400_height5/closure_area_growth_917.tif")
+clo_growth_1721 <- rast("data/processed/sensitivity/mmu400_height5/closure_area_growth_1721.tif")
 
 #load gap boundaries
-boundaries.2009 <- rast("processed/sensitivity/mmu400_height5/gap_boundaries9.tif")
-boundaries.2017 <- rast("processed/sensitivity/mmu400_height5/gap_boundaries17.tif")
+boundaries.2009 <- rast("data/processed/sensitivity/mmu400_height5/gap_boundaries9.tif")
+boundaries.2017 <- rast("data/processed/sensitivity/mmu400_height5/gap_boundaries17.tif")
 
 #adjust extents
 clo_growth_917 <- crop(clo_growth_917, boundaries.2009)
@@ -79,16 +76,16 @@ gap_closure_mechanism917 <- gap_closure_mechanism917(clo_growth_917, boundaries.
 gap_closure_mechanism1721 <- gap_closure_mechanism1721(clo_growth_1721, boundaries.2017)
 
 
-terra::writeRaster(gap_closure_mechanism917, "processed/sensitivity/mmu400_height5/gap_closure_mechanism917.tif", overwrite=TRUE) 
-terra::writeRaster(gap_closure_mechanism1721, "processed/sensitivity/mmu400_height5/gap_closure_mechanism1721.tif", overwrite=TRUE)
+terra::writeRaster(gap_closure_mechanism917, "data/processed/sensitivity/mmu400_height5/gap_closure_mechanism917.tif", overwrite=TRUE) 
+terra::writeRaster(gap_closure_mechanism1721, "data/processed/sensitivity/mmu400_height5/gap_closure_mechanism1721.tif", overwrite=TRUE)
 
 
 
-# 2009 - 2017
-###################################################################################################################
+# --- 2009 - 2017 ---
+
 
 #merge closure mechanism with gaps
-gap_closure_mechanism917 <- rast( "processed/sensitivity/mmu400_height5/gap_closure_mechanism917.tif")
+gap_closure_mechanism917 <- rast( "data/processed/sensitivity/mmu400_height5/gap_closure_mechanism917.tif")
 
 gaps2009 <- crop(gaps2009, gap_closure_mechanism917)
 gap_closure_mechanism_stack <- c(gap_closure_mechanism917, gaps2009)
@@ -125,8 +122,8 @@ gap_clo_per_id_nona <- gap_clo_per_id_nona %>%
                                              `1`="lateral closure",
                                              `2`="vertical closure")))
 
-##### if I want to include the no closure pixels, I have to disable following line: !!!!
-#exclude no closure shares
+# if I want to include the no closure pixels, I have to disable following line: !!!!
+# exclude no closure shares
 gap_clo_per_id_nona.sub <- subset(gap_clo_per_id_nona, closure_mechanism %in% c("vertical closure", "lateral closure"))
 
 
@@ -156,11 +153,11 @@ gap_clo_per_id_nona_917<-gap_clo_per_id_nona %>%
                                      `(1,45]`=">1")))
 
 
-# 2017- 2021
-###################################################################################################################
+# --- 2017- 2021 ---
+
 
 # #merge closure mechanism with gaps
-gap_closure_mechanism1721 <- rast("processed/sensitivity/mmu400_height5/gap_closure_mechanism1721.tif")
+gap_closure_mechanism1721 <- rast("data/processed/sensitivity/mmu400_height5/gap_closure_mechanism1721.tif")
 
 gaps2017 <- crop(gaps2017, gap_closure_mechanism1721)
 gap_closure_mechanism_stack_1721 <- c(gap_closure_mechanism1721, gaps2017)
@@ -198,8 +195,8 @@ gap_clo_per_id_nona <- gap_clo_per_id_nona %>%
                                               `1`="lateral closure",
                                               `2`="vertical closure")))
 
-#exclude no closure shares
-##### if I want to include the no closure pixels, I have to disable following line: !!!!
+# exclude no closure shares
+#if I want to include the no closure pixels, I have to disable following line: !!!!
 gap_clo_per_id_nona.sub <- subset(gap_clo_per_id_nona, closure_mechanism %in% c("vertical closure", "lateral closure"))
 
 #aggregate closure share
@@ -279,5 +276,5 @@ gap_clo$gap.size <- as.factor(gap_clo$gap.size)
 #order labels
 gap_clo$gap.size <- ordered(gap_clo$gap.size, levels = c("0.04-0.1", "0.1-0.2",  "0.2-0.3",  "0.3-0.4",  "0.4-0.5",  "0.5-0.6",  "0.6-0.7",  "0.7-0.8",  "0.8-0.9",  "0.9-1", ">1" ))
 
-saveRDS(gap_clo, "processed/sensitivity/mmu400_height5/clo_analysis_ready.rds")
+saveRDS(gap_clo, "data/processed/sensitivity/mmu400_height5/clo_analysis_ready.rds")
 

@@ -1,5 +1,7 @@
 #############################
+#
 # Extract environmental features of Reserach area
+#
 #############################
 
 # load libaries
@@ -10,19 +12,14 @@ library(terra)
 library(ggplot2)
 library(RColorBrewer)
 
-# set working directory
-
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
-
 
 # --- load NP information 
 
-foresttype <- rast("raw/forest_final/forest_types2020.tif")
-management <- vect("raw/npb_zonierung_22_epsg25832.shp") # where did I create this elevation layer?
-aspect<-  rast("processed/environment_features/aspect_2021_classified_1m.tif")
-elevation <- rast("processed/environment_features/berchtesgaden_2021_classified_200steps_dtm_1m.tif")
-closed.forest <- vect("raw/closed_forest_epsg25832.shp")
+foresttype <- rast("data/raw/forest_final/forest_types2020.tif")
+management <- vect("data/raw/npb_zonierung_22_epsg25832.shp") 
+aspect<-  rast("data/processed/environment_features/aspect_2021_classified_1m.tif")
+elevation <- rast("data/processed/environment_features/berchtesgaden_2021_classified_200steps_dtm_1m.tif")
+closed.forest <- vect("data/raw/closed_forest_epsg25832.shp")
 
 
 # --- extract environmental information for research area
@@ -43,9 +40,9 @@ elevation.1800.poly <- as.polygons(elevation.1800, trunc=TRUE, dissolve=TRUE, va
 
 elevation.below1800 <- mask(elevation, elevation.1800.poly)
 
-writeRaster(elevation.below1800, "processed/environment_features/elevation_below1800_200steps.tif")
+writeRaster(elevation.below1800, "data/processed/environment_features/elevation_below1800_200steps.tif")
 
-elevation.below1800 <- rast("processed/environment_features/elevation_below1800_200steps.tif")
+elevation.below1800 <- rast("data/processed/environment_features/elevation_below1800_200steps.tif")
 
 #freq(elevation.below1800) #check if I really excluded all pixels >1800 m
 
@@ -67,8 +64,8 @@ foresttype <- subst(foresttype, 6, 5)
 # resample to match resolution
 foresttype <- resample(foresttype, elevation.below1800, method="near")
 
-writeRaster(foresttype, "processed/environment_features/forest_type2020_reclass_1m.tif")
-foresttype <- rast("processed/environment_features/forest_type2020_reclass_1m.tif")
+writeRaster(foresttype, "data/processed/environment_features/forest_type2020_reclass_1m.tif")
+foresttype <- rast("data/processed/environment_features/forest_type2020_reclass_1m.tif")
 
 
 #-------calculate area shares per category of study area
@@ -83,11 +80,11 @@ environ_stack.study <- mask(environ_stack.study, closed.forest)
 environ_stack.study <- mask(environ_stack.study, foresttype)
 environ_stack.study <- mask(environ_stack.study, elevation.below1800)
 
-writeRaster(environ_stack.study, "processed/environment_features/stack_environment_studyarea.tif")
+writeRaster(environ_stack.study, "data/processed/environment_features/stack_environment_studyarea.tif")
 
 rm(list = ls()) # clear workspace
 
-environ_stack.study <- rast("processed/environment_features/stack_environment_studyarea.tif")
+environ_stack.study <- rast("data/processed/environment_features/stack_environment_studyarea.tif")
 
 df.area <- as.data.frame(environ_stack.study, na.rm = FALSE) 
 
@@ -100,11 +97,11 @@ df.area.nona <- df.area.nona[df.area.nona$elevation != 7,] #pixels which have be
 head(df.area.nona)  
 
 
-saveRDS(df.area.nona, "processed/environment_features/df.area.nona.rds") # old: processed/creation/updated/df.area.nona.rds
+saveRDS(df.area.nona, "data/processed/environment_features/df.area.nona.rds") # old: processed/creation/updated/df.area.nona.rds
 
 rm(list = ls()) # clear workspace
 
-df.area.nona <- readRDS("processed/environment_features/df.area.nona.rds") 
+df.area.nona <- readRDS("data/processed/environment_features/df.area.nona.rds") 
 
 
 # bring into long format for analysis
@@ -128,7 +125,7 @@ class.name <- c("North", "East", "South", "West",
                 "Beech", "Spruce-fir-beech", "Spruce", "Larch-Pine")
 area_share_class$class.name <- class.name
 
-saveRDS(area_share_class, "processed/environment_features/area_share_per_class_studyarea.rds")
+saveRDS(area_share_class, "data/processed/environment_features/area_share_per_class_studyarea.rds")
 
 area_share_class %>%
   group_by(category) %>%
@@ -138,7 +135,7 @@ area_share_class %>%
 
 # --- load area shares
 
-area_share_class <- readRDS("processed/environment_features/area_share_per_class_studyarea.rds")
+area_share_class <- readRDS("data/processed/environment_features/area_share_per_class_studyarea.rds")
 
 #--- prepare df for area share plotting
 
@@ -231,9 +228,8 @@ p <- ggplot(data, aes(x=as.factor(id), y=value, fill=group)) +       # Note that
   scale_fill_brewer(palette = "Dark2") 
 p
 
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/"
-setwd(wd)
-tiff("area_shares_NP.png", units="in", width=12, height=8, res=300)
+
+tiff("data/results/area_shares_NP.png", units="in", width=12, height=8, res=300)
 p
 dev.off()
 

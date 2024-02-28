@@ -8,23 +8,17 @@
 library(plyr)
 library(dplyr)
 library(terra)
-library(ForestGapR)
 library(ggplot2)
 require(scales)
-library(tidyverse)
-library(ggthemes)
 
-
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
 
 # --- load classified Gap layers of new and expanding gaps ----
 
-gaps2017.id <- rast("processed/gaps_final/berchtesgaden_2017_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
-gaps2021.id <- rast("processed/gaps_final/berchtesgaden_2021_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
+gaps2017.id <- rast("data/processed/gaps_final/berchtesgaden_2017_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
+gaps2021.id <- rast("data/processed/gaps_final/berchtesgaden_2021_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
 
-gaps2017 <- rast("processed/creation/gaps2017_new_extended_stable.tif")
-gaps2021 <- rast("processed/creation/gaps2021_new_extended_stable.tif")
+gaps2017 <- rast("data/processed/creation/gaps2017_new_extended_stable.tif")
+gaps2021 <- rast("data/processed/creation/gaps2021_new_extended_stable.tif")
 
 # crop gaps ID
 
@@ -33,19 +27,19 @@ gaps2021.id <-crop(gaps2021.id, gaps2021, snap="near",mask=TRUE)
 
 #load expansion and closure layer and extract only expansion areas
 
-exp_clo917 <- rast("processed/gap_change/formation_closure_917_cn2cr2_mmu400n8_filtered.tif") 
+exp_clo917 <- rast("data/processed/gap_change/formation_closure_917_cn2cr2_mmu400n8_filtered.tif") 
 exp917 <- classify(exp_clo917, cbind(1, NA)) #replace 1=closure with NA to get only expansion areas
 
-exp_clo1721 <- rast("processed/gap_change/formation_closure_1721_cn2cr2_mmu400n8_filtered.tif") # doesn't load - why?
+exp_clo1721 <- rast("data/processed/gap_change/formation_closure_1721_cn2cr2_mmu400n8_filtered.tif") # doesn't load - why?
 exp1721 <- classify(exp_clo1721, cbind(1, NA)) #replace 1=closure with NA to get only expansion areas
 
 # --- load NP information 
 
-foresttype <- rast("processed/environment_features/forest_type2020_reclass_1m.tif")
-management <- vect("raw/npb_zonierung_22_epsg25832.shp")
-aspect<-  rast("processed/environment_features/aspect_2021_classified_1m.tif")
-elevation.below1800 <- rast("processed/environment_features/elevation_below1800_200steps.tif")
-closed.forest <- vect("raw/closed_forest_epsg25832.shp")
+foresttype <- rast("data/processed/environment_features/forest_type2020_reclass_1m.tif")
+management <- vect("data/raw/npb_zonierung_22_epsg25832.shp")
+aspect<-  rast("data/processed/environment_features/aspect_2021_classified_1m.tif")
+elevation.below1800 <- rast("data/processed/environment_features/elevation_below1800_200steps.tif")
+closed.forest <- vect("data/raw/closed_forest_epsg25832.shp")
 
 # extract core zone to exclude management zone
 core.zone <- subset(management, management$zone_id == 4, c(1:2))
@@ -71,8 +65,8 @@ stack2017 <- mask(stack2017, core.zone)
 stack2017 <- mask(stack2017, closed.forest)
 stack2017 <- mask(stack2017, elevation.below1800)
 
-writeRaster(stack2017, "processed/creation/stack.2017.all.gap.information.expansion.tif")
-gap_stack_2017 <- rast("processed/creation/stack.2017.all.gap.information.expansion.tif")
+writeRaster(stack2017, "data/processed/creation/stack.2017.all.gap.information.expansion.tif")
+gap_stack_2017 <- rast("data/processed/creation/stack.2017.all.gap.information.expansion.tif")
 
 df <- as.data.frame(gap_stack_2017, na.rm = FALSE) 
 
@@ -80,8 +74,8 @@ df1 <- df[!is.na(df$gap.id),] #expansion could only take place where there is a 
 # df1 <- df1[!is.na(df1$forest_type),] # exclude all areas with no forest type information
 # df1 <- df1[!is.na(df1$elevation),]# exclude all areas > 1800 m (NA in this case, as it was re-coded above) 
 
-write_rds(df1, "processed/creation/stack_2017_new_exp_df.rds")
-df1 <- readRDS( "processed/creation/stack_2017_new_exp_df.rds")
+write_rds(df1, "data/processed/creation/stack_2017_new_exp_df.rds")
+df1 <- readRDS( "data/processed/creation/stack_2017_new_exp_df.rds")
 
 
 #2021
@@ -94,8 +88,8 @@ stack21 <- mask(stack21, core.zone)
 stack21 <- mask(stack21, closed.forest)
 stack21 <- mask(stack21, elevation.below1800)
 
-writeRaster(stack21, "processed/creation/stack.2021.all.gap.information.expansion.tif")
-gap_stack_2021 <- rast("processed/creation/stack.2021.all.gap.information.expansion.tif")
+writeRaster(stack21, "data/processed/creation/stack.2021.all.gap.information.expansion.tif")
+gap_stack_2021 <- rast("data/processed/creation/stack.2021.all.gap.information.expansion.tif")
 
 df <- as.data.frame(gap_stack_2021, na.rm = FALSE) 
 
@@ -103,14 +97,14 @@ df2 <- df[!is.na(df$gap.id),] #expansion could only take place where there is a 
 # df2 <- df2[!is.na(df2$forest_type),] # exclude all areas with no forest type information
 # df2 <- df2[!is.na(df2$elevation),]# exclude all areas > 1800 m (na in this case, as it was recoded above) 
 
-write_rds(df2, "processed/creation/stack_2021_new_exp_df.rds")
-df2<- readRDS("processed/creation/stack_2021_new_exp_df.rds")
+write_rds(df2, "data/processed/creation/stack_2021_new_exp_df.rds")
+df2<- readRDS("data/processed/creation/stack_2021_new_exp_df.rds")
 
 
 # --- calculate features per gap(.id)
 
-df1 <- readRDS( "processed/creation/stack_2017_new_exp_df.rds")
-df2<- readRDS("processed/creation/stack_2021_new_exp_df.rds")
+df1 <- readRDS( "data/processed/creation/stack_2017_new_exp_df.rds")
+df2<- readRDS("data/processed/creation/stack_2021_new_exp_df.rds")
 
 
 gap_features_917 <- df1 %>% group_by(gap.id) %>%
@@ -226,7 +220,7 @@ gap_features_917 <- merge(gap_features_917, ftype[,c("gap.id","forest_type")], b
 gap_features_917 <- merge(gap_features_917, elevation[,c("gap.id","elevation")], by = "gap.id", all.x = TRUE)
 gap_features_917 <- merge(gap_features_917, aspect[,c("gap.id","aspect")], by = "gap.id", all.x = TRUE)
 
-saveRDS(gap_features_917,"processed/creation/gap_features_new_expanding_917.rds")
+saveRDS(gap_features_917,"data/processed/creation/gap_features_new_expanding_917.rds")
 
 
 #2021
@@ -239,13 +233,13 @@ gap_features_1721 <- merge(gap_features_1721, ftype[,c("gap.id","forest_type")],
 gap_features_1721 <- merge(gap_features_1721, elevation[,c("gap.id","elevation")], by = "gap.id", all.x = TRUE)
 gap_features_1721 <- merge(gap_features_1721, aspect[,c("gap.id","aspect")], by = "gap.id", all.x = TRUE)
 
-saveRDS(gap_features_1721,"processed/creation/gap_features_new_expanding_1721.rds")
+saveRDS(gap_features_1721,"data/processed/creation/gap_features_new_expanding_1721.rds")
 
 
 # analyse new and expanding gaps ----------------------------------------------------------
 
-gap_features_917 <- readRDS("processed/creation/gap_features_new_expanding_917.rds")
-gap_features_1721 <- readRDS("processed/creation/gap_features_new_expanding_1721.rds")
+gap_features_917 <- readRDS("data/processed/creation/gap_features_new_expanding_917.rds")
+gap_features_1721 <- readRDS("data/processed/creation/gap_features_new_expanding_1721.rds")
 
 gap_features_1721$year <- as.factor("17-21")
 gap_features_917$year <- as.factor("9-17")
@@ -318,7 +312,7 @@ quantile(gap_dist$dist_near_gap)
 
 mean(gap_dist$dist_near_gap) # 738.7354
 
-saveRDS(gap_dist, "processed/creation/dist_new_gap.917.rds")
+saveRDS(gap_dist, "data/processed/creation/dist_new_gap.917.rds")
 
 My_Theme = theme(
   title = element_text(size = 18),
@@ -333,7 +327,7 @@ My_Theme = theme(
   panel.spacing = unit(2, "lines"),
   legend.position="top")
 
-tiff("C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/gap_creation/new_gap_dist_917.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/gap_creation/new_gap_dist_917.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap_dist, aes(x=dist_near_gap)) + geom_histogram(bins=100) +
   theme_classic() +
   geom_histogram(color = "#000000", fill = "lightgreen") +
@@ -370,9 +364,9 @@ quantile(gap_dist$dist_near_gap)
 
 mean(gap_dist$dist_near_gap) # 179.6479
 
-saveRDS(gap_dist, "processed/creation/dist_new_gap.1721.rds")
+saveRDS(gap_dist, "data/processed/creation/dist_new_gap.1721.rds")
 
-tiff("C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/gap_creation/new_gap_dist_1721.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/gap_creation/new_gap_dist_1721.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap_dist, aes(x=dist_near_gap)) + geom_histogram(bins=100) +
   theme_classic() +
   geom_histogram(color = "#000000", fill = "lightgreen") +
@@ -384,8 +378,8 @@ dev.off()
 
 # --- combine both time steps
 
-gap_dist1 <- readRDS("processed/creation/updated/dist_new_gap.917.rds")
-gap_dist2 <- readRDS("processed/creation/updated/dist_new_gap.1721.rds")
+gap_dist1 <- readRDS("data/processed/creation/updated/dist_new_gap.917.rds")
+gap_dist2 <- readRDS("data/processed/creation/updated/dist_new_gap.1721.rds")
 
 gap_dist <- rbind(gap_dist1, gap_dist2)
 
@@ -395,7 +389,7 @@ quantile(gap_dist$dist_near_gap)
 
 mean(gap_dist$dist_near_gap) # 312.1125
 
-tiff("C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/gap_creation/new_gap_dist_921.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/gap_creation/new_gap_dist_921.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap_dist, aes(x=dist_near_gap)) + geom_histogram(bins=100) +
   theme_classic() +
   geom_histogram(color = "#000000", fill = "lightgreen") +
@@ -416,8 +410,8 @@ gap_masked_research <- mask(gap_stack_2017.closed$forest_type, gap_stack_2017.cl
 
 random_gaps <- spatSample(gap_masked_research, size=300,method = "random", replace=FALSE, as.points=TRUE, na.rm=TRUE )
 
-writeRaster(gap_masked_research, "processed/creation/distance_newgap/sample_area_gapmasked_2017.tif", overwrite=T)
-writeVector(random_gaps, "processed/creation/distance_newgap/random_new_gap.gpkg")
+writeRaster(gap_masked_research, "data/processed/creation/distance_newgap/sample_area_gapmasked_2017.tif", overwrite=T)
+writeVector(random_gaps, "data/processed/creation/distance_newgap/random_new_gap.gpkg")
 
 # calculate distances:
 
@@ -446,9 +440,9 @@ quantile(gap_dist$dist_near_gap)
 
 mean(gap_dist$dist_near_gap) # 477.7631
 
-saveRDS(gap_dist, "processed/creation/distance_newgap/dist_new_gap.917_randomtest.rds")
+saveRDS(gap_dist, "data/processed/creation/distance_newgap/dist_new_gap.917_randomtest.rds")
 
-tiff("C:/Users/ge92vuh/Documents/MA_gap_dynamics/results/gap_creation/new_gap_dist_917_randomtest.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/gap_creation/new_gap_dist_917_randomtest.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap_dist, aes(x=dist_near_gap)) + geom_histogram(bins=100) +
   theme_classic() +
   geom_histogram(color = "#000000", fill = "lightgreen") +
@@ -482,12 +476,12 @@ gap.creation <- gap_features921 %>% group_by(new.exp, year) %>%
         q95 = quantile(gap.creation.annual, 0.95),
         q97.5 = quantile(gap.creation.annual, 0.975),)
 
-saveRDS(gap.creation, "processed/creation/gap_creation_final.rds" )
+saveRDS(gap.creation, "data/processed/creation/gap_creation_final.rds" )
 
 #--------- area scaling
 
 # ---load  area shares for scaling
-area_share_class <- readRDS("processed/environment_features/area_share_per_class_studyarea.rds")
+area_share_class <- readRDS("data/processed/environment_features/area_share_per_class_studyarea.rds")
 
 gap.creation$area.scaling.factor <- 100/4000 #scaling to gap creation per 100 ha (percent!), total reserach area is 4000 ha (3999 ha)
 gap.creation$avg.gap.creation.annual.scaled <- gap.creation$avg.gap.creation.annual*gap.creation$area.scaling.factor
@@ -590,12 +584,10 @@ gap.creation.elevation<- gap_features921 %>% group_by(new.exp, year, elevation) 
 gap.creation.elevation$elevation <- ordered(gap.creation.elevation$elevation, levels = c("1600-1800", "1400-1600","1200-1400","1000-1200", "800-1000",  "600-800" ))
 gap.creation.elevation$elevation <- factor(gap.creation.elevation$elevation,levels=rev(levels(gap.creation.elevation$elevation)))
 
-saveRDS(gap.creation.elevation, "processed/creation/gap_creation_elevation.rds")
+saveRDS(gap.creation.elevation, "data/processed/creation/gap_creation_elevation.rds")
 
 # --------------------------------------------------- graphs
 
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/results/gap_creation/"
-setwd(wd)
 
 # plot distribution of new gaps and instances of gap expansion
 
@@ -614,7 +606,7 @@ My_Theme = theme(
 
 # only gap formation area
 
-tiff("new_exp_density_creation.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/gap_creation/new_exp_density_creation.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap_features921, aes(x=exp.area.ha, fill=factor(new.exp))) + geom_density(alpha=.5) +
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),labels = trans_format("log10", math_format(10^.x)))+
   guides(fill=guide_legend(title="Formation mechanism")) +
@@ -640,7 +632,7 @@ My_Theme = theme(
   panel.spacing = unit(2, "lines"),
   legend.position = "top")
 
-tiff("new_exp_density_formation_pertime.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/gap_creation/new_exp_density_formation_pertime.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap_features921, aes(x=exp.area.ha, fill=factor(new.exp))) + geom_density(alpha=.5) +
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),labels = trans_format("log10", math_format(10^.x)))+
   guides(fill=guide_legend(title="Formation mechanism")) +
@@ -694,7 +686,7 @@ My_Theme = theme(
 
 # 90th quantile data range
 
-tiff("area_new_exp_90quantile.tiff", units="in", width=12, height=9, res=300)
+tiff("data/results/gap_creation/area_new_exp_90quantile.tiff", units="in", width=12, height=9, res=300)
 ggplot(gap.creation, aes(x=new.exp , y=median.scaled, colour= new.exp, group= new.exp, fill=new.exp)) + 
   geom_point(shape = 21, size = 16) +
   theme_classic()+ coord_flip() +
@@ -709,7 +701,7 @@ dev.off()
 
 # 95th quantile data range
 
-tiff("area_new_exp_95quantile.tiff", units="in", width=12, height=9, res=300)
+tiff("data/results/gap_creation/area_new_exp_95quantile.tiff", units="in", width=12, height=9, res=300)
 ggplot(gap.creation, aes(x=new.exp , y=median.scaled, colour= new.exp, group= new.exp, fill=new.exp)) + 
   geom_point(shape = 21, size = 16) +
   theme_classic()+ coord_flip() +
@@ -746,7 +738,7 @@ forest_gap$new.exp <- ordered(forest_gap$new.exp, levels = c("New", "Expanding",
 
 # 90th quantile data range
 
-tiff("area_new_exp_ftype_90quantile.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/gap_creation/area_new_exp_ftype_90quantile.tiff", units="in", width=12, height=8, res=300)
 ggplot(forest_gap, aes(x=forest_type , y=median_ascaled, fill=new.exp)) + 
   geom_point(aes(colour= new.exp), shape = 21, size = 8, position=position_dodge(width=0.7)) +
   scale_color_manual(values = c("#E69F00", "grey40", "#56B4E9"), name = "Formation mechanism")+
@@ -760,7 +752,7 @@ dev.off()
 
 # 95th quantile data range
 
-tiff("area_new_exp_ftype_95quantile.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/gap_creation/area_new_exp_ftype_95quantile.tiff", units="in", width=12, height=8, res=300)
 ggplot(forest_gap, aes(x=forest_type , y=median_ascaled, fill=new.exp)) + 
   geom_point(aes(colour= new.exp), shape = 21, size = 8, position=position_dodge(width=0.7)) +
   scale_color_manual(values = c("#E69F00", "grey40", "#56B4E9"), name = "Formation mechanism")+
@@ -846,7 +838,7 @@ aspect_gap$new.exp <- as.factor(aspect_gap$new.exp)
 aspect_gap$new.exp <- ordered(aspect_gap$new.exp, levels = c("New", "Expanding","Total"))
 
 
-tiff("area_new_exp_aspect_95th.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/gap_creation/area_new_exp_aspect_95th.tiff", units="in", width=12, height=8, res=300)
 ggplot(aspect_gap, aes(x=aspect , y=median_ascaled, colour= new.exp, group= new.exp, fill=new.exp)) + 
   geom_point(aes(colour= new.exp), shape = 21, size = 8, position=position_dodge(width=0.7)) +
   theme_minimal()+ coord_flip()  +
@@ -899,7 +891,7 @@ elevation_gap$new.exp <- as.factor(elevation_gap$new.exp)
 elevation_gap$new.exp <- ordered(elevation_gap$new.exp, levels = c("New", "Expanding","Total"))
 
 
-tiff("area_new_exp_elevation_95th.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/gap_creation/area_new_exp_elevation_95th.tiff", units="in", width=12, height=8, res=300)
 ggplot(elevation_gap, aes(x=elevation , y=median_ascaled, colour= new.exp, group= new.exp, fill=new.exp)) + 
   geom_point(aes(colour= new.exp), shape = 21, size = 8, position=position_dodge(width=0.7)) +
   theme_minimal()+ coord_flip()  +

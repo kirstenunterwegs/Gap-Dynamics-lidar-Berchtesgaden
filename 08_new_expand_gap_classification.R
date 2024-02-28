@@ -14,17 +14,11 @@ library(doParallel)
 library(dplyr)
 
 
-# --- set working directory ---
-
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
-
-
 # --- load gap layers ----
 
-gaps2009 <- rast("processed/gaps_final/berchtesgaden_2009_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
-gaps2017 <- rast("processed/gaps_final/berchtesgaden_2017_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
-gaps2021 <- rast("processed/gaps_final/berchtesgaden_2021_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
+gaps2009 <- rast("data/processed/gaps_final/berchtesgaden_2009_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
+gaps2017 <- rast("data/processed/gaps_final/berchtesgaden_2017_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
+gaps2021 <- rast("data/processed/gaps_final/berchtesgaden_2021_chm_1m_patchid_cn2cr2_mmu400n8_filtered_woheight.tif")
 
 # crop gaps 
 
@@ -68,10 +62,10 @@ class_df <- foreach(i = unique(gaps.df$gaps2017), .combine = rbind) %dopar% { #"
 stopCluster(cl)
 class_df <- as.data.frame(class_df)
 
-saveRDS(class_df, "processed/creation/new_exp_gap_class_917.rds")
+saveRDS(class_df, "data/processed/creation/new_exp_gap_class_917.rds")
 
 
-class_df<- readRDS("processed/creation/new_exp_gap_class_917.rds")
+class_df<- readRDS("data/processed/creation/new_exp_gap_class_917.rds")
 
 class_df_917 <- class_df
 names(class_df) <- c("gap_id", "class") #rename columns
@@ -100,7 +94,7 @@ rclamat3 <- cbind(ID_vector_stablegap, ID_vector_replace_stable)
 rclmat <- rbind(rclmat1, rclamat2, rclamat3)
 
 gaps2017_class<- classify(gaps2017, rclmat, include.lowest=TRUE)
-writeRaster(gaps2017_class, "processed/creation/gaps2017_new_extended_stable.tif")
+writeRaster(gaps2017_class, "data/processed/creation/gaps2017_new_extended_stable.tif")
 
 
 # --- 2017-2021 ---
@@ -125,8 +119,8 @@ class_df <- foreach(i = unique(gaps.df$gaps2021), .combine = rbind) %dopar% { #"
 stopCluster(cl)
 class_df <- as.data.frame(class_df)
 
-saveRDS(class_df, "processed/creation/new_exp_gap_class_1721.rds")
-class_df <- readRDS( "processed/creation/new_exp_gap_class_1721.rds")
+saveRDS(class_df, "data/processed/creation/new_exp_gap_class_1721.rds")
+class_df <- readRDS( "data/processed/creation/new_exp_gap_class_1721.rds")
 
 class_df_1721 <- class_df
 names(class_df) <- c("gap_id", "class") #rename columns
@@ -155,7 +149,7 @@ rclamat3 <- cbind(ID_vector_stablegap, ID_vector_replace_stable)
 rclmat <- rbind(rclmat1, rclamat2, rclamat3)
 
 gaps2021_class<- classify(gaps2021, rclmat, include.lowest=TRUE)
-writeRaster(gaps2021_class, "processed/creation/gaps2021_new_extended_stable.tif")
+writeRaster(gaps2021_class, "data/processed/creation/gaps2021_new_extended_stable.tif")
 
 
 

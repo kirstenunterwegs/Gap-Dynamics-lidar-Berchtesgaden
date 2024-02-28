@@ -9,13 +9,9 @@ library(ggplot2)
 library(RColorBrewer)
 
 
-
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
-
 # --- load Gap layers ----
 
-gap_stack <- rast("processed/gaps_sensitivity/gap.stack.mmu400.sensitivity.tif") # layer have been cropped previously to the research area
+gap_stack <- rast("data/processed/gaps_sensitivity/gap.stack.mmu400.sensitivity.tif") # layer have been cropped previously to the research area
 gaps2009<- gap_stack[[1]]
 gaps2017<- gap_stack[[2]]
 
@@ -25,20 +21,21 @@ gaps2017<- gap_stack[[2]]
 
 
 boundaries9 <- boundaries(gaps2009, directions=8, inner=TRUE)
-writeRaster(boundaries9, "processed/sensitivity/mmu400_height5/gap_boundaries9.tif")
+writeRaster(boundaries9, "data/processed/sensitivity/mmu400_height5/gap_boundaries9.tif")
 
 boundaries17 <- boundaries(gaps2017, directions=8, inner=TRUE)
-writeRaster(boundaries17, "processed/sensitivity/mmu400_height5/gap_boundaries17.tif")
+writeRaster(boundaries17, "data/processed/sensitivity/mmu400_height5/gap_boundaries17.tif")
+
 
 # ---- classify vertical and horizontal closure ----
 
 #load closure areas with growth information
-clo_growth_917 <- rast("processed/sensitivity/mmu400_height5/closure_area_growth_917.tif")
-clo_growth_1721 <- rast("processed/sensitivity/mmu400_height5/closure_area_growth_1721.tif")
+clo_growth_917 <- rast("data/processed/sensitivity/mmu400_height5/closure_area_growth_917.tif")
+clo_growth_1721 <- rast("data/processed/sensitivity/mmu400_height5/closure_area_growth_1721.tif")
 
 #load gap boundaries
-boundaries.2009 <- rast("processed/sensitivity/mmu400_height5/gap_boundaries9.tif")
-boundaries.2017 <- rast("processed/sensitivity/mmu400_height5/gap_boundaries17.tif")
+boundaries.2009 <- rast("data/processed/sensitivity/mmu400_height5/gap_boundaries9.tif")
+boundaries.2017 <- rast("data/processed/sensitivity/mmu400_height5/gap_boundaries17.tif")
 
 #adjust extents
 clo_growth_917 <- crop(clo_growth_917, boundaries.2009)
@@ -46,7 +43,7 @@ clo_growth_1721 <- crop(clo_growth_1721, boundaries.2017)
 
 # define function to differentiate between regeneration (vertical) and crown plasticity (horizontal)
 
-# need to differ between both timesteps due to differnet growing periods
+# need to differ between both time steps due to different growing periods
 
 # --- add and deduct 20% to max height gain threshold for sensitivity analysis ---
 
@@ -120,11 +117,11 @@ gap_closure_mechanism917_high <- gap_closure_mechanism917_high(clo_growth_917, b
 gap_closure_mechanism1721_high <- gap_closure_mechanism1721_high(clo_growth_1721, boundaries.2017)
 
 
-writeRaster(gap_closure_mechanism917_low, "processed/sensitivity/growth_thres_sensitivity/gap_closure_mechanism917_low.tif")
-writeRaster(gap_closure_mechanism1721_low, "processed/sensitivity/growth_thres_sensitivity/gap_closure_mechanism1721_low.tif")
+writeRaster(gap_closure_mechanism917_low, "data/processed/sensitivity/growth_thres_sensitivity/gap_closure_mechanism917_low.tif")
+writeRaster(gap_closure_mechanism1721_low, "data/processed/sensitivity/growth_thres_sensitivity/gap_closure_mechanism1721_low.tif")
 
-writeRaster(gap_closure_mechanism917_high, "processed/sensitivity/growth_thres_sensitivity/gap_closure_mechanism917_high.tif")
-writeRaster(gap_closure_mechanism17_high, "processed/sensitivity/growth_thres_sensitivity/gap_closure_mechanism1721_high.tif")
+writeRaster(gap_closure_mechanism917_high, "data/processed/sensitivity/growth_thres_sensitivity/gap_closure_mechanism917_high.tif")
+writeRaster(gap_closure_mechanism17_high, "data/processed/sensitivity/growth_thres_sensitivity/gap_closure_mechanism1721_high.tif")
 
 # --- prepare dataframes for analysis ----
 
@@ -165,8 +162,8 @@ gap_clo_per_id_nona <- gap_clo_per_id_nona %>%
                                              `1`="lateral closure",
                                              `2`="vertical closure")))
 
-##### if I want to include the no closure pixels, I have to disable following line: !!!!
-#exclude no closure shares
+# if I want to include the no closure pixels, I have to disable following line: !!!!
+# exclude no closure shares
 gap_clo_per_id_nona.sub <- subset(gap_clo_per_id_nona, closure_mechanism %in% c("vertical closure", "lateral closure"))
 
 
@@ -234,8 +231,8 @@ gap_clo_per_id_nona <- gap_clo_per_id_nona %>%
                                               `1`="lateral closure",
                                               `2`="vertical closure")))
 
-#exclude no closure shares
-##### if I want to include the no closure pixels, I have to disable following line: !!!!
+# exclude no closure shares
+# if I want to include the no closure pixels, I have to disable following line: !!!!
 gap_clo_per_id_nona.sub <- subset(gap_clo_per_id_nona, closure_mechanism %in% c("vertical closure", "lateral closure"))
 
 #aggregate closure share
@@ -316,7 +313,7 @@ gap_clo$gap.size <- ordered(gap_clo$gap.size, levels = c("0.04-0.1", "0.1-0.2", 
 
 gap_clo_low <- gap_clo
 
-saveRDS(gap_clo_low, "processed/sensitivity/growth_thres_sensitivity/clo_analysis_ready_low.rds")
+saveRDS(gap_clo_low, "data/processed/sensitivity/growth_thres_sensitivity/clo_analysis_ready_low.rds")
 
 ##################################################################################
 
@@ -503,18 +500,18 @@ gap_clo$closure_mechanism <- as.factor(gap_clo$closure_mechanism)
 gap_clo$closure_mechanism <-  ordered(gap_clo$closure_mechanism, levels = c("lateral closure" , "vertical closure", "total"))  
 gap_clo$gap.size <- as.factor(gap_clo$gap.size)
 
-#order labels
+# order labels
 gap_clo$gap.size <- ordered(gap_clo$gap.size, levels = c("0.04-0.1", "0.1-0.2",  "0.2-0.3",  "0.3-0.4",  "0.4-0.5",  "0.5-0.6",  "0.6-0.7",  "0.7-0.8",  "0.8-0.9",  "0.9-1", ">1" ))
 
 gap_clo_high <- gap_clo
 
-saveRDS(gap_clo_high, "processed/sensitivity/growth_thres_sensitivity/clo_analysis_ready_high.rds")
+saveRDS(gap_clo_high, "data/processed/sensitivity/growth_thres_sensitivity/clo_analysis_ready_high.rds")
 
 ################################################################################
 
-# ---- load gap closure information of original mmu400 heigh threshold 5m gap layer and merge
+# ---- load gap closure information of original mmu400 height threshold 5m gap layer and merge
 
-gap_clo_original<-  readRDS("processed/sensitivity/mmu400_height5/clo_analysis_ready.rds")
+gap_clo_original<-  readRDS("data/processed/sensitivity/mmu400_height5/clo_analysis_ready.rds")
 
 
 # --- assign thresholds and prepare for plotting 
@@ -525,12 +522,9 @@ gap_clo_high$growth_thres <- as.factor(0.6)
 
 gap_clo<- rbind(gap_clo_low, gap_clo_original, gap_clo_high)
 
-# -----
+
 
 # prepare plotting
-
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/results/sensitivity_analysis/height_growth_thres/"
-setwd(wd)
 
 
 # --- closure rates as boxplots
@@ -551,7 +545,7 @@ My_Theme = theme(
 # append "m" to the factor levels of growth_thres
 gap_clo$growth_thres <- paste0(gap_clo$growth_thres, " m")
 
-tiff("gap_closure_gap.size_box.tiff", units="in", width=12, height=8, res=300)
+tiff("data/results/sensitivity_analysis/height_growth_thres/gap_closure_gap.size_box.tiff", units="in", width=12, height=8, res=300)
 ggplot(gap_clo, aes(x=gap.size , y=clo_share_annual, fill=closure_mechanism)) +
   geom_boxplot(position=position_dodge(width=0.9)) +
   theme_minimal()+ coord_flip()  +  
@@ -562,6 +556,7 @@ dev.off()
 
 
 # Calculate the share of lateral closure on the sum of lateral and vertical closure per growth threshold
+
 summary <- gap_clo %>%
   group_by(growth_thres) %>%
   summarise(avg_lateral_closure_share = mean(clo_share_annual [closure_mechanism == "lateral closure"]),

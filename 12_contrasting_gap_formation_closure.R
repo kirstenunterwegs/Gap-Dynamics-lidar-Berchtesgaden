@@ -1,15 +1,22 @@
+#######################################
+#
+# Comparing gap formation and closure rates
+# in total and by elevation zone
+#
+######################################
+
+
+# load libaries
+
 library(dplyr)
 library(tidyr)
 
 
-
-wd <- "C:/Users/ge92vuh/Documents/MA_gap_dynamics/data/"
-setwd(wd)
-
 # load data
-area_share_class <- readRDS("processed/environment_features/area_share_per_class_studyarea.rds")
-creation <- readRDS("processed/creation/gap_creation_elevation.rds")
-closure <- readRDS("processed/closure/gap_closure_elevation.rds")
+
+area_share_class <- readRDS("data/processed/environment_features/area_share_per_class_studyarea.rds")
+creation <- readRDS("data/processed/creation/gap_creation_elevation.rds")
+closure <- readRDS("data/processed/closure/gap_closure_elevation.rds")
 
 
 #--- process data for comparison
