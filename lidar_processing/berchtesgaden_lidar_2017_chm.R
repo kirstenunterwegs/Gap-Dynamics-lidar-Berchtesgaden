@@ -64,6 +64,8 @@ ctg_norm <- normalize_height(ctg, dtm)
 ctg_norm <- readLAScatalog(p_norm)
 opt_output_files(ctg_norm) <-  paste0(file.path(root, "chm1"), "/{*}_chm1")
 
+opt_filter(ctg_norm) = "-drop_z_above 50"
+
 chm <- rasterize_canopy(ctg_norm, res = 1, algorithm = pitfree(subcircle=0.2))
 terra::writeRaster(chm, file.path(root, "berchtesgaden_2017_chm1.tif"))
 
