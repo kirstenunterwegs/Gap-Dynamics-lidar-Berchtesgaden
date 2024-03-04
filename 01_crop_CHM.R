@@ -10,11 +10,11 @@ library(terra)
 
 # --- load CHM, closed forest and artifacts mask ---
 
-chm9 <- rast("data/processed/CHM_data/lidar/2009/berchtesgaden_2009_chm1.tif")
-chm17<- rast("data/processed/CHM_data/lidar/2017/berchtesgaden_2017_chm1.tif")
-chm21<- rast("data/processed/CHM_data/lidar/2021/berchtesgaden_2021_chm1.tif")
+chm9 <- rast("data/processed/CHM_data/lidar/2009/berchtesgaden_2009_chm_1m.tif")
+chm17<- rast("data/processed/CHM_data/lidar/2017/berchtesgaden_2017_chm_1m.tif")
+chm21<- rast("data/processed/CHM_data/lidar/2021/berchtesgaden_2021_chm.tif")
 closed_forest <- vect("data/raw/closed_forest.gpkg")
-artifacts <- vect("data/processed/artifacts_mask/artifacts_mask.gpkg") # manually masked out artifacts from closed forest layer in QGis
+artifacts <- vect("data/processed/artifacts_mask/artifacts_berchtesgaden_25832.gpkg") # manually delineated artifacts in closed forest area in QGis
 
 
 # --- crop to closed forest areas --- 
@@ -48,9 +48,9 @@ chm17<- chm_stack[[2]]
 chm21<- chm_stack[[3]]
 
 
-chm9m <- mask(chm9, artifacts)
-chm17m <-  mask(chm17, artifacts)
-chm21m <-  mask(chm21, artifacts)
+chm9m <- mask(chm9, artifacts, inverse = TRUE)
+chm17m <-  mask(chm17, artifacts, inverse = TRUE)
+chm21m <-  mask(chm21, artifacts, inverse = TRUE)
 
 chm_berchtesgaden <- c(chm9m, chm17m, chm21m)
 names(chm_berchtesgaden) <- c("chm9", "chm17", "chm21")
